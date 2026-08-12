@@ -1,0 +1,118 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/briefing.gd" id="1_script"]
+
+[sub_resource type="StyleBoxFlat" id="Estilo_painel"]
+bg_color = Color(0.0862745, 0.101961, 0.12549, 0.968627)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.235294, 0.278431, 0.333333, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[node name="Briefing" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 400.0
+offset_bottom = 208.0
+script = ExtResource("1_script")
+
+[node name="Fundo" type="ColorRect" parent="."]
+layout_mode = 0
+offset_right = 400.0
+offset_bottom = 208.0
+color = Color(0.0470588, 0.0588235, 0.0745098, 1)
+
+[node name="Painel" type="Panel" parent="."]
+layout_mode = 0
+offset_left = 30.0
+offset_top = 14.0
+offset_right = 370.0
+offset_bottom = 194.0
+theme_override_styles/panel = SubResource("Estilo_painel")
+
+[node name="Conteudo" type="VBoxContainer" parent="Painel"]
+layout_mode = 0
+offset_left = 14.0
+offset_top = 10.0
+offset_right = 326.0
+offset_bottom = 170.0
+theme_override_constants/separation = 5
+
+[node name="Titulo" type="Label" parent="Painel/Conteudo"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.819608, 0.4, 1)
+theme_override_font_sizes/font_size = 12
+horizontal_alignment = 1
+text = "DIA 1"
+
+[node name="Resumo" type="Label" parent="Painel/Conteudo"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.831373, 0.858824, 0.898039, 1)
+theme_override_font_sizes/font_size = 7
+horizontal_alignment = 1
+text = "21 tarefas na sua mesa. 60 segundos de expediente."
+
+[node name="Separador" type="HSeparator" parent="Painel/Conteudo"]
+layout_mode = 2
+
+[node name="Instrucao" type="Label" parent="Painel/Conteudo"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.588235, 0.627451, 0.678431, 1)
+theme_override_font_sizes/font_size = 7
+horizontal_alignment = 1
+text = "Cada papel é uma tarefa. Chegue perto para ler o que é, e responda com o corpo:"
+autowrap_mode = 2
+
+[node name="Regras" type="VBoxContainer" parent="Painel/Conteudo"]
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="Fazer" type="Label" parent="Painel/Conteudo/Regras"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.560784, 0.839216, 0.658824, 1)
+theme_override_font_sizes/font_size = 7
+horizontal_alignment = 1
+text = "ENCOSTAR  =  faço agora"
+
+[node name="Deixar" type="Label" parent="Painel/Conteudo/Regras"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94902, 0.756863, 0.305882, 1)
+theme_override_font_sizes/font_size = 7
+horizontal_alignment = 1
+text = "PASSAR DIRETO  =  deixo para lá"
+
+[node name="Delegar" type="Label" parent="Painel/Conteudo/Regras"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.352941, 0.662745, 0.901961, 1)
+theme_override_font_sizes/font_size = 7
+horizontal_alignment = 1
+text = "SUBIR NA BANDEJA DO COLEGA  =  delego"
+
+[node name="Foco" type="Label" parent="Painel/Conteudo/Regras"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.454902, 0.643137, 0.945098, 1)
+theme_override_font_sizes/font_size = 7
+horizontal_alignment = 1
+text = "SEGURAR SHIFT  =  me concentro (leio de longe, mas ando devagar)"
+autowrap_mode = 2
+
+[node name="Alerta" type="Label" parent="Painel/Conteudo"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.878431, 0.360784, 0.360784, 1)
+theme_override_font_sizes/font_size = 7
+horizontal_alignment = 1
+text = "O elevador só abre com TODAS as urgentes resolvidas."
+autowrap_mode = 2
+
+[node name="Continuar" type="Label" parent="Painel/Conteudo"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.643137, 0.694118, 1)
+theme_override_font_sizes/font_size = 7
+horizontal_alignment = 1
+text = "qualquer tecla para bater o ponto"

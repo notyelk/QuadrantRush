@@ -1,0 +1,221 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/hud.gd" id="1_script"]
+
+[sub_resource type="Gradient" id="Gradiente_vinheta"]
+offsets = PackedFloat32Array(0, 0.62, 1)
+colors = PackedColorArray(0, 0, 0, 0, 0, 0, 0, 0, 0.6, 0.05, 0.05, 1)
+
+[sub_resource type="Gradient" id="Gradiente_foco"]
+offsets = PackedFloat32Array(0, 0.35, 1)
+colors = PackedColorArray(0.11, 0.16, 0.3, 0, 0.11, 0.16, 0.3, 0.18, 0.07, 0.1, 0.22, 0.82)
+
+[sub_resource type="GradientTexture2D" id="Textura_foco"]
+gradient = SubResource("Gradiente_foco")
+width = 200
+height = 104
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[sub_resource type="GradientTexture2D" id="Textura_vinheta"]
+gradient = SubResource("Gradiente_vinheta")
+width = 200
+height = 104
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[node name="HUD" type="CanvasLayer"]
+layer = 10
+script = ExtResource("1_script")
+
+[node name="Vinheta" type="TextureRect" parent="."]
+anchors_preset = 0
+offset_right = 400.0
+offset_bottom = 208.0
+mouse_filter = 2
+texture = SubResource("Textura_vinheta")
+expand_mode = 1
+modulate = Color(1, 1, 1, 0)
+
+[node name="Foco" type="TextureRect" parent="."]
+anchors_preset = 0
+offset_right = 400.0
+offset_bottom = 208.0
+mouse_filter = 2
+texture = SubResource("Textura_foco")
+expand_mode = 1
+modulate = Color(1, 1, 1, 0)
+
+[node name="Topo" type="Control" parent="."]
+anchors_preset = 0
+offset_right = 400.0
+offset_bottom = 22.0
+mouse_filter = 2
+
+[node name="Fundo" type="ColorRect" parent="Topo"]
+anchors_preset = 0
+offset_right = 400.0
+offset_bottom = 22.0
+color = Color(0, 0, 0, 0.47)
+mouse_filter = 2
+
+[node name="Tempo" type="Label" parent="Topo"]
+anchors_preset = 0
+offset_left = 5.0
+offset_top = 2.0
+offset_right = 65.0
+offset_bottom = 14.0
+theme_override_font_sizes/font_size = 9
+text = "01:30"
+mouse_filter = 2
+
+[node name="Interrupcoes" type="Label" parent="Topo"]
+anchors_preset = 0
+offset_left = 68.0
+offset_top = 4.0
+offset_right = 138.0
+offset_bottom = 14.0
+theme_override_colors/font_color = Color(0.352941, 0.662745, 0.901961, 1)
+theme_override_font_sizes/font_size = 7
+text = ""
+mouse_filter = 2
+
+[node name="Pasta" type="Label" parent="Topo"]
+anchors_preset = 0
+offset_left = 68.0
+offset_top = 4.0
+offset_right = 138.0
+offset_bottom = 14.0
+theme_override_colors/font_color = Color(0.725490, 0.752941, 0.878431, 1)
+theme_override_font_sizes/font_size = 7
+text = ""
+mouse_filter = 2
+
+[node name="Urgentes" type="Label" parent="Topo"]
+anchors_preset = 0
+offset_left = 140.0
+offset_top = 3.0
+offset_right = 260.0
+offset_bottom = 14.0
+theme_override_font_sizes/font_size = 8
+horizontal_alignment = 1
+text = ""
+mouse_filter = 2
+
+[node name="Pontos" type="Label" parent="Topo"]
+anchors_preset = 0
+offset_left = 290.0
+offset_top = 2.0
+offset_right = 395.0
+offset_bottom = 14.0
+theme_override_colors/font_color = Color(1, 0.819608, 0.4, 1)
+theme_override_font_sizes/font_size = 9
+horizontal_alignment = 2
+text = "0 pts"
+mouse_filter = 2
+
+[node name="Percurso" type="Control" parent="Topo"]
+anchors_preset = 0
+offset_left = 6.0
+offset_top = 16.0
+offset_right = 394.0
+offset_bottom = 20.0
+mouse_filter = 2
+
+[node name="Trilho" type="ColorRect" parent="Topo/Percurso"]
+anchors_preset = 0
+offset_right = 388.0
+offset_bottom = 3.0
+color = Color(1, 1, 1, 0.16)
+mouse_filter = 2
+
+[node name="Andado" type="ColorRect" parent="Topo/Percurso"]
+anchors_preset = 0
+offset_right = 0.0
+offset_bottom = 3.0
+color = Color(0.56, 0.84, 0.66, 0.75)
+mouse_filter = 2
+
+[node name="MarcaPrazo" type="ColorRect" parent="Topo/Percurso"]
+anchors_preset = 0
+offset_top = -2.0
+offset_right = 3.0
+offset_bottom = 5.0
+color = Color(1, 0.42, 0.42, 1)
+mouse_filter = 2
+
+[node name="MarcaJogador" type="ColorRect" parent="Topo/Percurso"]
+anchors_preset = 0
+offset_top = -2.0
+offset_right = 3.0
+offset_bottom = 5.0
+color = Color(1, 1, 1, 1)
+mouse_filter = 2
+
+[node name="MarcaSaida" type="ColorRect" parent="Topo/Percurso"]
+anchors_preset = 0
+offset_left = 385.0
+offset_top = -2.0
+offset_right = 388.0
+offset_bottom = 5.0
+color = Color(1, 0.82, 0.4, 1)
+mouse_filter = 2
+
+[node name="Alerta" type="Label" parent="."]
+anchors_preset = 0
+offset_left = 100.0
+offset_top = 28.0
+offset_right = 300.0
+offset_bottom = 44.0
+theme_override_colors/font_color = Color(1, 0.42, 0.42, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.9)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 11
+horizontal_alignment = 1
+text = "ATRÁS DE VOCÊ"
+modulate = Color(1, 1, 1, 0)
+mouse_filter = 2
+
+[node name="Faixa" type="Control" parent="."]
+anchors_preset = 0
+offset_top = 189.0
+offset_right = 400.0
+offset_bottom = 208.0
+mouse_filter = 2
+
+[node name="Fundo" type="ColorRect" parent="Faixa"]
+anchors_preset = 0
+offset_right = 400.0
+offset_bottom = 19.0
+color = Color(0, 0, 0, 0.65)
+mouse_filter = 2
+
+[node name="Borda" type="ColorRect" parent="Faixa"]
+anchors_preset = 0
+offset_right = 3.0
+offset_bottom = 19.0
+color = Color(1, 1, 1, 1)
+mouse_filter = 2
+
+[node name="Titulo" type="Label" parent="Faixa"]
+anchors_preset = 0
+offset_left = 8.0
+offset_top = 4.0
+offset_right = 148.0
+offset_bottom = 16.0
+theme_override_font_sizes/font_size = 7
+text = ""
+mouse_filter = 2
+
+[node name="Texto" type="Label" parent="Faixa"]
+anchors_preset = 0
+offset_left = 152.0
+offset_top = 4.0
+offset_right = 396.0
+offset_bottom = 16.0
+theme_override_colors/font_color = Color(0.847059, 0.866667, 0.901961, 1)
+theme_override_font_sizes/font_size = 7
+text = ""
+mouse_filter = 2

@@ -1,0 +1,102 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/tela_resultado.gd" id="1_script"]
+
+[sub_resource type="StyleBoxFlat" id="Estilo_painel"]
+bg_color = Color(0.0862745, 0.101961, 0.12549, 0.949020)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.235294, 0.278431, 0.333333, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[node name="TelaResultado" type="CanvasLayer"]
+process_mode = 3
+layer = 20
+script = ExtResource("1_script")
+
+[node name="Escurecer" type="ColorRect" parent="."]
+anchors_preset = 0
+offset_right = 400.0
+offset_bottom = 208.0
+color = Color(0, 0, 0, 0.55)
+
+[node name="Painel" type="Panel" parent="."]
+anchors_preset = 0
+offset_left = 22.0
+offset_top = 14.0
+offset_right = 378.0
+offset_bottom = 201.0
+theme_override_styles/panel = SubResource("Estilo_painel")
+
+[node name="Conteudo" type="VBoxContainer" parent="Painel"]
+anchors_preset = 0
+offset_left = 12.0
+offset_top = 9.0
+offset_right = 344.0
+offset_bottom = 171.0
+theme_override_constants/separation = 4
+
+[node name="Titulo" type="Label" parent="Painel/Conteudo"]
+theme_override_font_sizes/font_size = 12
+horizontal_alignment = 1
+text = "EXPEDIENTE CONCLUÍDO"
+
+[node name="Subtitulo" type="Label" parent="Painel/Conteudo"]
+theme_override_colors/font_color = Color(0.588235, 0.627451, 0.678431, 1)
+theme_override_font_sizes/font_size = 7
+horizontal_alignment = 1
+text = ""
+
+[node name="Separador" type="HSeparator" parent="Painel/Conteudo"]
+
+[node name="Cabecalho" type="Label" parent="Painel/Conteudo"]
+theme_override_colors/font_color = Color(0.490196, 0.529412, 0.580392, 1)
+theme_override_font_sizes/font_size = 6
+text = "DESEMPENHO POR QUADRANTE DA MATRIZ DE EISENHOWER"
+
+[node name="Linhas" type="VBoxContainer" parent="Painel/Conteudo"]
+theme_override_constants/separation = 3
+
+[node name="Separador2" type="HSeparator" parent="Painel/Conteudo"]
+
+[node name="Total" type="Label" parent="Painel/Conteudo"]
+theme_override_colors/font_color = Color(1, 0.819608, 0.4, 1)
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 2
+text = "PONTUAÇÃO FINAL:  0 pts"
+
+[node name="Envio" type="Label" parent="Painel/Conteudo"]
+theme_override_colors/font_color = Color(0.490196, 0.529412, 0.580392, 1)
+theme_override_font_sizes/font_size = 6
+horizontal_alignment = 1
+text = ""
+
+[node name="Botoes" type="HBoxContainer" parent="Painel/Conteudo"]
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="Proximo" type="Button" parent="Painel/Conteudo/Botoes"]
+custom_minimum_size = Vector2(96, 18)
+theme_override_font_sizes/font_size = 8
+text = "Próximo expediente"
+visible = false
+
+[node name="Repetir" type="Button" parent="Painel/Conteudo/Botoes"]
+custom_minimum_size = Vector2(88, 18)
+theme_override_font_sizes/font_size = 8
+text = "Jogar de novo"
+
+[node name="Ranking" type="Button" parent="Painel/Conteudo/Botoes"]
+custom_minimum_size = Vector2(56, 18)
+theme_override_font_sizes/font_size = 8
+text = "Ranking"
+
+[node name="Sair" type="Button" parent="Painel/Conteudo/Botoes"]
+custom_minimum_size = Vector2(64, 18)
+theme_override_font_sizes/font_size = 8
+text = "Título"

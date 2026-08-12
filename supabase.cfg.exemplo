@@ -1,0 +1,21 @@
+; Modelo de configuracao do banco em nuvem.
+;
+; 1. Copie este arquivo para `supabase.cfg`, na raiz do projeto.
+; 2. Preencha os dois campos com os dados do seu projeto Supabase, em
+;    Project Settings -> API:
+;      "Project URL"                          -> url
+;      chave publica (publishable/anon public) -> anon_key
+; 3. Aplique `supabase/schema.sql` no SQL Editor do Supabase.
+;
+; A chave secreta (service_role) nao entra aqui.
+;
+; `supabase.cfg` esta no .gitignore. A chave publica e feita para rodar no cliente, mas
+; quem clonasse o repositorio passaria a gravar no banco de outra pessoa sem perceber.
+;
+; Sem este arquivo o jogo funciona: as partidas ficam num ranking local e a tela informa
+; isso, em vez de simular uma conexao que nao existe.
+
+[supabase]
+
+url="https://SEU-PROJETO.supabase.co"
+anon_key="COLE-AQUI-A-CHAVE-PUBLICA"

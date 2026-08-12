@@ -1,0 +1,29 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/caixa_saida.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://sprites/Little Bits Office/Office tiles/Little_Bits_office_objects.png" id="2_objetos"]
+[ext_resource type="Texture2D" path="res://sprites/gerado/luz_radial.png" id="3_luz"]
+
+[sub_resource type="RectangleShape2D" id="Shape_caixa"]
+size = Vector2(22, 18)
+
+[node name="CaixaSaida" type="Area2D"]
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("1_script")
+
+[node name="Brilho" type="Sprite2D" parent="."]
+modulate = Color(0.725490, 0.752941, 0.878431, 0.45)
+position = Vector2(0, -6)
+scale = Vector2(0.22, 0.22)
+texture = ExtResource("3_luz")
+
+[node name="Bandeja" type="Sprite2D" parent="."]
+position = Vector2(0, -6)
+texture = ExtResource("2_objetos")
+region_enabled = true
+region_rect = Rect2(96, 32, 16, 12)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -8)
+shape = SubResource("Shape_caixa")

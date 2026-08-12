@@ -1,0 +1,76 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/bifurcacao_q3.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://sprites/PixelOffice/PixelOfficeAssets.png" id="2_icones"]
+
+[sub_resource type="RectangleShape2D" id="Shape_ponto"]
+size = Vector2(36, 44)
+
+[sub_resource type="RectangleShape2D" id="Shape_corredor"]
+size = Vector2(28, 40)
+
+[sub_resource type="RectangleShape2D" id="Shape_proximidade"]
+size = Vector2(200, 140)
+
+[node name="BifurcacaoQ3" type="Node2D"]
+script = ExtResource("1_script")
+
+[node name="Rotulo" type="Label" parent="."]
+z_index = 4
+offset_left = -60.0
+offset_top = -116.0
+offset_right = 60.0
+offset_bottom = -88.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.972549, 0.972549, 0.972549, 1)
+theme_override_colors/font_outline_color = Color(0.0784314, 0.0745098, 0.113725, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 6
+horizontal_alignment = 1
+vertical_alignment = 2
+autowrap_mode = 2
+
+[node name="Proximidade" type="Area2D" parent="."]
+position = Vector2(0, -50)
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Proximidade"]
+shape = SubResource("Shape_proximidade")
+
+; O gatilho de RESOLVER cobre y −40..0 (relativo à bifurcação, que fica no piso), e o de
+; DELEGAR cobre −86..−42. Eles NÃO podem se tocar.
+;
+; Este ponto já foi 28x56 em (0,−30), ou seja −58..−2, e o de delegar chega a
+; −42: quem subia na bandeja (corpo de −66 a −48) entrava nos DOIS no mesmo quadro, e o
+; primeiro sinal processado decidia a tarefa. Na prática, subir para delegar registrava
+; RESOLVER na metade das vezes — e o colega ficava sentado, sem nada denunciar o motivo.
+; Quem corre pelo chão tem o corpo em −18..0 e continua sendo pego normalmente.
+[node name="PontoResolver" type="Area2D" parent="."]
+position = Vector2(0, -20)
+z_index = 3
+collision_layer = 0
+collision_mask = 2
+
+[node name="Icone" type="Sprite2D" parent="PontoResolver"]
+texture = ExtResource("2_icones")
+region_enabled = true
+region_rect = Rect2(192, 107, 6, 9)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PontoResolver"]
+shape = SubResource("Shape_corredor")
+
+[node name="PontoDelegar" type="Area2D" parent="."]
+position = Vector2(0, -74)
+z_index = 3
+collision_layer = 0
+collision_mask = 2
+
+[node name="Icone" type="Sprite2D" parent="PontoDelegar"]
+texture = ExtResource("2_icones")
+region_enabled = true
+region_rect = Rect2(192, 107, 6, 9)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PontoDelegar"]
+position = Vector2(0, 10)
+shape = SubResource("Shape_ponto")

@@ -1,0 +1,23 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/ligacao.gd" id="1_script"]
+
+[sub_resource type="CircleShape2D" id="Shape_ligacao"]
+radius = 9.0
+
+[node name="Ligacao" type="Area2D"]
+z_index = 5
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("1_script")
+
+[node name="Halo" type="Polygon2D" parent="."]
+color = Color(0.435294, 0.658824, 0.839216, 0.27451)
+polygon = PackedVector2Array(13, 0, 11.26, 6.5, 6.5, 11.26, 0, 13, -6.5, 11.26, -11.26, 6.5, -13, 0, -11.26, -6.5, -6.5, -11.26, 0, -13, 6.5, -11.26, 11.26, -6.5)
+
+[node name="Corpo" type="Polygon2D" parent="."]
+color = Color(0.435294, 0.658824, 0.839216, 1)
+polygon = PackedVector2Array(-7, -5, -3, -5, -2, -1, -4, 1, -1, 4, 1, 2, 5, 3, 5, 7, -1, 7, -5, 4, -7, -1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("Shape_ligacao")

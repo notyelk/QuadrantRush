@@ -1,0 +1,40 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/saida.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://sprites/Little Bits Office/Office tiles/Little_Bits_office_objects.png" id="2_objetos"]
+
+[sub_resource type="RectangleShape2D" id="Shape_bloqueio"]
+size = Vector2(6, 34)
+
+[sub_resource type="RectangleShape2D" id="Shape_gatilho"]
+size = Vector2(16, 30)
+
+[node name="Saida" type="Node2D"]
+script = ExtResource("1_script")
+
+[node name="Elevador" type="Sprite2D" parent="."]
+z_index = 1
+position = Vector2(0, -16)
+texture = ExtResource("2_objetos")
+region_enabled = true
+region_rect = Rect2(128, 48, 32, 32)
+
+[node name="Luz" type="Polygon2D" parent="."]
+z_index = 2
+position = Vector2(0, -34)
+color = Color(1, 1, 1, 1)
+polygon = PackedVector2Array(3, 0, 2.12, 2.12, 0, 3, -2.12, 2.12, -3, 0, -2.12, -2.12, 0, -3, 2.12, -2.12)
+
+[node name="Bloqueio" type="StaticBody2D" parent="."]
+position = Vector2(-14, -17)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Bloqueio"]
+shape = SubResource("Shape_bloqueio")
+
+[node name="Gatilho" type="Area2D" parent="."]
+position = Vector2(4, -16)
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Gatilho"]
+shape = SubResource("Shape_gatilho")

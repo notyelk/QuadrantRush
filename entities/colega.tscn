@@ -1,0 +1,78 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/colega.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://sprites/Little Bits Office/businessman1/businessman1_idle_right.png" id="2_idle"]
+[ext_resource type="Texture2D" path="res://sprites/Little Bits Office/businessman1/businessman1_walk_right.png" id="3_walk"]
+[ext_resource type="Texture2D" path="res://sprites/PixelOffice/PixelOfficeAssets.png" id="4_papel"]
+
+[sub_resource type="AtlasTexture" id="Atlas_idle0"]
+atlas = ExtResource("2_idle")
+region = Rect2(0, 0, 16, 32)
+
+[sub_resource type="AtlasTexture" id="Atlas_idle1"]
+atlas = ExtResource("2_idle")
+region = Rect2(16, 0, 16, 32)
+
+[sub_resource type="AtlasTexture" id="Atlas_walk0"]
+atlas = ExtResource("3_walk")
+region = Rect2(0, 0, 16, 32)
+
+[sub_resource type="AtlasTexture" id="Atlas_walk1"]
+atlas = ExtResource("3_walk")
+region = Rect2(16, 0, 16, 32)
+
+[sub_resource type="AtlasTexture" id="Atlas_walk2"]
+atlas = ExtResource("3_walk")
+region = Rect2(32, 0, 16, 32)
+
+[sub_resource type="AtlasTexture" id="Atlas_walk3"]
+atlas = ExtResource("3_walk")
+region = Rect2(48, 0, 16, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_colega"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("Atlas_idle0")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_idle1")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 3.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("Atlas_walk0")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_walk1")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_walk2")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_walk3")
+}],
+"loop": true,
+"name": &"walk",
+"speed": 9.0
+}]
+
+[node name="Colega" type="Node2D"]
+z_index = 1
+script = ExtResource("1_script")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+modulate = Color(0.611765, 0.784314, 1, 1)
+offset = Vector2(0, -13)
+sprite_frames = SubResource("SpriteFrames_colega")
+animation = &"idle"
+autoplay = "idle"
+
+[node name="Papel" type="Sprite2D" parent="."]
+position = Vector2(6, -14)
+texture = ExtResource("4_papel")
+region_enabled = true
+region_rect = Rect2(192, 107, 6, 9)

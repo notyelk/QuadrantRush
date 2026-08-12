@@ -1,0 +1,61 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/notificacao.gd" id="1_script"]
+
+[sub_resource type="RectangleShape2D" id="Shape_contato"]
+size = Vector2(18, 12)
+
+[node name="Notificacao" type="Area2D"]
+z_index = 4
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("1_script")
+
+[node name="Corpo" type="Control" parent="."]
+offset_left = -10.0
+offset_top = -7.0
+offset_right = 10.0
+offset_bottom = 7.0
+mouse_filter = 2
+
+[node name="Sombra" type="ColorRect" parent="Corpo"]
+offset_left = 1.0
+offset_top = 1.0
+offset_right = 21.0
+offset_bottom = 15.0
+mouse_filter = 2
+color = Color(0.0392157, 0.0431373, 0.0705882, 0.478431)
+
+[node name="Fundo" type="ColorRect" parent="Corpo"]
+offset_right = 20.0
+offset_bottom = 14.0
+mouse_filter = 2
+color = Color(0.133333, 0.156863, 0.227451, 1)
+
+[node name="Barra" type="ColorRect" parent="Corpo"]
+offset_right = 20.0
+offset_bottom = 4.0
+mouse_filter = 2
+color = Color(0.352941, 0.662745, 0.901961, 1)
+
+[node name="Fechar" type="ColorRect" parent="Corpo"]
+offset_left = 16.0
+offset_top = 1.0
+offset_right = 19.0
+offset_bottom = 3.0
+mouse_filter = 2
+color = Color(0.909804, 0.360784, 0.360784, 1)
+
+[node name="Aviso" type="Label" parent="Corpo"]
+offset_top = 3.0
+offset_right = 20.0
+offset_bottom = 14.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.945098, 0.945098, 0.945098, 1)
+theme_override_font_sizes/font_size = 9
+text = "!"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("Shape_contato")

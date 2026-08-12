@@ -1,0 +1,162 @@
+[gd_scene load_steps=23 format=3]
+
+[ext_resource type="Script" path="res://scripts/prazo.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://sprites/Sprite Pack 5/7 - Grizzly/Walking_(48 x 32).png" id="2_andar"]
+[ext_resource type="Texture2D" path="res://sprites/Sprite Pack 5/7 - Grizzly/Idle_(48 x 32).png" id="3_parado"]
+[ext_resource type="Texture2D" path="res://sprites/Sprite Pack 5/7 - Grizzly/Sleeping_&_Wakeup_(48 x 32).png" id="4_dormindo"]
+[ext_resource type="Texture2D" path="res://sprites/Sprite Pack 5/7 - Grizzly/Attack_(48 x 32).png" id="5_atacar"]
+
+[sub_resource type="AtlasTexture" id="Andar_0"]
+atlas = ExtResource("2_andar")
+region = Rect2(0, 0, 48, 32)
+
+[sub_resource type="AtlasTexture" id="Andar_1"]
+atlas = ExtResource("2_andar")
+region = Rect2(48, 0, 48, 32)
+
+[sub_resource type="AtlasTexture" id="Andar_2"]
+atlas = ExtResource("2_andar")
+region = Rect2(96, 0, 48, 32)
+
+[sub_resource type="AtlasTexture" id="Andar_3"]
+atlas = ExtResource("2_andar")
+region = Rect2(144, 0, 48, 32)
+
+[sub_resource type="AtlasTexture" id="Andar_4"]
+atlas = ExtResource("2_andar")
+region = Rect2(192, 0, 48, 32)
+
+[sub_resource type="AtlasTexture" id="Andar_5"]
+atlas = ExtResource("2_andar")
+region = Rect2(240, 0, 48, 32)
+
+[sub_resource type="AtlasTexture" id="Parado_0"]
+atlas = ExtResource("3_parado")
+region = Rect2(0, 0, 48, 32)
+
+[sub_resource type="AtlasTexture" id="Dorme_0"]
+atlas = ExtResource("4_dormindo")
+region = Rect2(0, 0, 48, 32)
+
+[sub_resource type="AtlasTexture" id="Dorme_1"]
+atlas = ExtResource("4_dormindo")
+region = Rect2(48, 0, 48, 32)
+
+[sub_resource type="AtlasTexture" id="Dorme_2"]
+atlas = ExtResource("4_dormindo")
+region = Rect2(96, 0, 48, 32)
+
+[sub_resource type="AtlasTexture" id="Ataca_0"]
+atlas = ExtResource("5_atacar")
+region = Rect2(0, 0, 48, 32)
+
+[sub_resource type="AtlasTexture" id="Ataca_1"]
+atlas = ExtResource("5_atacar")
+region = Rect2(48, 0, 48, 32)
+
+[sub_resource type="AtlasTexture" id="Ataca_2"]
+atlas = ExtResource("5_atacar")
+region = Rect2(96, 0, 48, 32)
+
+[sub_resource type="AtlasTexture" id="Ataca_3"]
+atlas = ExtResource("5_atacar")
+region = Rect2(144, 0, 48, 32)
+
+[sub_resource type="AtlasTexture" id="Ataca_4"]
+atlas = ExtResource("5_atacar")
+region = Rect2(192, 0, 48, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_prazo"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("Andar_0")
+}, {
+"duration": 1.0,
+"texture": SubResource("Andar_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("Andar_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("Andar_3")
+}, {
+"duration": 1.0,
+"texture": SubResource("Andar_4")
+}, {
+"duration": 1.0,
+"texture": SubResource("Andar_5")
+}],
+"loop": true,
+"name": &"andar",
+"speed": 7.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("Ataca_0")
+}, {
+"duration": 1.0,
+"texture": SubResource("Ataca_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("Ataca_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("Ataca_3")
+}, {
+"duration": 1.0,
+"texture": SubResource("Ataca_4")
+}],
+"loop": false,
+"name": &"atacar",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 3.0,
+"texture": SubResource("Dorme_0")
+}, {
+"duration": 1.0,
+"texture": SubResource("Dorme_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("Dorme_2")
+}],
+"loop": true,
+"name": &"dormindo",
+"speed": 2.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("Parado_0")
+}],
+"loop": true,
+"name": &"parado",
+"speed": 4.0
+}]
+
+[sub_resource type="RectangleShape2D" id="Shape_corpo"]
+size = Vector2(28, 22)
+
+[node name="Prazo" type="CharacterBody2D"]
+z_index = 1
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("1_script")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, -16)
+sprite_frames = SubResource("SpriteFrames_prazo")
+animation = &"dormindo"
+autoplay = "dormindo"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -12)
+shape = SubResource("Shape_corpo")
+
+[node name="Hurtbox" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+position = Vector2(0, -12)
+shape = SubResource("Shape_corpo")

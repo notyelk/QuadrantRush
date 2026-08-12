@@ -1,0 +1,70 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/ladrao_de_tempo.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://sprites/Sprite Pack 5/5 - Moe Scotty/Flying_(32 x 32).png" id="2_voo"]
+
+[sub_resource type="AtlasTexture" id="Voo_0"]
+atlas = ExtResource("2_voo")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="Voo_1"]
+atlas = ExtResource("2_voo")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="Voo_2"]
+atlas = ExtResource("2_voo")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="Voo_3"]
+atlas = ExtResource("2_voo")
+region = Rect2(96, 0, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_ladrao"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("Voo_0")
+}, {
+"duration": 1.0,
+"texture": SubResource("Voo_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("Voo_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("Voo_3")
+}],
+"loop": true,
+"name": &"voar",
+"speed": 12.0
+}]
+
+[sub_resource type="RectangleShape2D" id="Shape_corpo"]
+size = Vector2(14, 12)
+
+[sub_resource type="RectangleShape2D" id="Shape_hurtbox"]
+size = Vector2(16, 14)
+
+[node name="LadraoDeTempo" type="CharacterBody2D"]
+z_index = 2
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("1_script")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, -12)
+sprite_frames = SubResource("SpriteFrames_ladrao")
+animation = &"voar"
+autoplay = "voar"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -12)
+shape = SubResource("Shape_corpo")
+
+[node name="Hurtbox" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+position = Vector2(0, -12)
+shape = SubResource("Shape_hurtbox")

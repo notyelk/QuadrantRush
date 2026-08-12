@@ -1,0 +1,32 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/plataforma_movel.gd" id="1_script"]
+
+[node name="PlataformaMovel" type="AnimatableBody2D"]
+z_index = 1
+script = ExtResource("1_script")
+
+[node name="Corpo" type="ColorRect" parent="."]
+anchors_preset = 0
+offset_right = 48.0
+offset_bottom = 12.0
+color = Color(0.27, 0.3, 0.38, 1)
+mouse_filter = 2
+
+[node name="Luz" type="ColorRect" parent="."]
+anchors_preset = 0
+offset_right = 48.0
+offset_bottom = 2.0
+color = Color(0.65, 0.78, 0.95, 1)
+mouse_filter = 2
+
+[node name="Pele" type="TextureRect" parent="."]
+visible = false
+anchors_preset = 0
+offset_right = 48.0
+offset_bottom = 16.0
+stretch_mode = 1
+texture_repeat = 1
+mouse_filter = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]

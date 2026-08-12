@@ -81,15 +81,16 @@ godot --headless --path . res://tests/teste_ranking.tscn
 
 Eles não verificam só regras: um dos cenários atravessa o corredor **a pé**, com a física
 real e as mesmas teclas de um humano, e outro confere cada degrau contra a trajetória
-integrada do pulo. Foi assim que a geometria das fases parou de depender de conferência
-visual. Como o Dia 3 é sorteado, o teste dele varre 200 sementes e exige as mesmas
-invariantes em todas — e também quebra a geometria de propósito, para provar que o
-validador recusa um mapa impossível em vez de aceitar qualquer coisa.
+integrada do pulo, o que tira a geometria das fases da conferência visual. Como o Dia 3 é
+sorteado, o teste dele varre 200 sementes e exige as mesmas invariantes em todas — e também
+quebra a geometria de propósito, para provar que o validador recusa um mapa impossível em
+vez de aceitar qualquer coisa.
 
-### Ranking em nuvem (opcional)
+### Ranking em nuvem
 
-O jogo funciona sem configurar nada — as partidas ficam num ranking local e a tela diz
-isso. Para ligar o ranking global:
+A versão publicada roda com o ranking global ligado. As credenciais não são versionadas,
+então quem clona este repositório começa com o ranking **local**: as partidas ficam na
+máquina e a tela diz isso, em vez de fingir nuvem. Para ligar a sua:
 
 1. Crie um projeto gratuito em [supabase.com](https://supabase.com).
 2. Rode [`supabase/schema.sql`](supabase/schema.sql) no SQL Editor do projeto.

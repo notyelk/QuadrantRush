@@ -1,0 +1,31 @@
+# Godot
+.godot/
+.import/
+export.cfg
+*.translation
+
+# Credenciais. O modelo versionado e supabase.cfg.exemplo
+supabase.cfg
+.env
+.env.*
+*.key
+*.pem
+secrets.*
+
+# Saida do export
+build/
+
+# Mono
+.mono/
+data_*/
+
+# Sistema e editores
+.DS_Store
+Thumbs.db
+__pycache__/
+*.pyc
+.vscode/
+.idea/
+
+# Documentos internos do TCC (dados pessoais)
+docs/

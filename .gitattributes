@@ -1,0 +1,16 @@
+# Fim de linha normalizado no repositório (LF) e restaurado conforme o sistema de quem
+# clona. Sem isto, um mesmo arquivo aberto no Windows e no Linux aparece como "arquivo
+# inteiro alterado" no diff, e a revisão de código vira ruído.
+* text=auto
+
+# Arquivos de cena e de recurso do Godot são texto, e é isso que torna o diff deles útil.
+*.gd     text
+*.tscn   text
+*.tres   text
+*.godot  text
+*.cfg    text
+
+# Binários: nunca converter fim de linha, sob pena de corromper o arquivo.
+*.png binary
+*.wav binary
+*.pdf binary

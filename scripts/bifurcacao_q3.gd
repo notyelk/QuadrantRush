@@ -71,6 +71,13 @@ func _process(_delta: float) -> void:
 		rotulo.modulate.a = move_toward(rotulo.modulate.a, alvo, 0.12)
 
 
+## Troca o enunciado depois de a cena já estar montada — ver tarefa.definir_texto().
+func definir_texto(novo: String) -> void:
+	texto = novo
+	if is_node_ready():
+		rotulo.text = texto
+
+
 func _ao_afastar(corpo: Node2D) -> void:
 	if corpo.is_in_group("Player"):
 		_perto = false
@@ -94,6 +101,16 @@ func _ao_resolver(corpo: Node2D) -> void:
 
 
 func _ao_delegar(corpo: Node2D) -> void:
+	if not corpo.is_in_group("Player"):
+		return
+	# Subir na bandeja de uma Q3 já resolvida no chão não faz nada, e silêncio ali lê como
+	# defeito. A faixa explica que a tarefa já foi tratada.
+	if _decidida:
+		get_tree().call_group(
+			"hud", "mostrar_dica", "JÁ TRATADA",
+			"Você resolveu esta tarefa sozinho lá embaixo.", COR_NEUTRA, 1
+		)
+		return
 	if not _pode_decidir(corpo):
 		return
 	_decidir(GameManager.Acao.DELEGAR, ponto_delegar.global_position)
@@ -125,11 +142,17 @@ func _decidir(acao: int, posicao: Vector2) -> void:
 	# monta a mensagem de resultado sozinho. Avisar dos dois lugares mostraria duas
 	# mensagens seguidas e a segunda apagaria a primeira.
 
-	# Desliga os dois lados: a tarefa já foi decidida, e o lado não escolhido não pode
-	# mais pontuar se o jogador voltar por ele.
+	# O lado não escolhido não pode mais pontuar se o jogador voltar por ele. O de delegar
+	# continua escutando só para poder explicar que a tarefa já foi tratada.
 	ponto_resolver.set_deferred("monitoring", false)
-	ponto_delegar.set_deferred("monitoring", false)
 	proximidade.set_deferred("monitoring", false)
+
+	# O colega dispensado se recolhe. Sem isso ele continua sentado, aceso e pulsando,
+	# como se ainda houvesse algo a fazer com ele.
+	if acao != GameManager.Acao.DELEGAR:
+		var ajudante := get_node_or_null(colega)
+		if ajudante != null and ajudante.has_method("dispensar"):
+			ajudante.dispensar()
 	# Revela o quadrante depois da decisão, como as demais tarefas fazem.
 	icone_resolver.modulate = Color(cor.r, cor.g, cor.b, 0.4)
 	icone_delegar.modulate = Color(cor.r, cor.g, cor.b, 0.4)

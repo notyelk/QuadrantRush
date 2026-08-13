@@ -926,6 +926,10 @@ def main() -> None:
         cy = MEZANINO_LINHA * T + 8
         colisores.append(("Mezanino%d" % i, cx, cy, forma(largura, 16)))
 
+    # Fecha as duas pontas do corredor: a camera tem limite, o corpo do jogador nao.
+    for nome, cx in [("BordaEsquerda", -8), ("BordaDireita", LARGURA + 8)]:
+        colisores.append((nome, cx, ALTURA // 2, forma(16, ALTURA * 3)))
+
     forma_checkpoint = forma(8, 56)
     forma_queda = forma(LARGURA, 60)
 

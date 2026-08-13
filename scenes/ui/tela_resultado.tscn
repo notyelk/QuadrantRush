@@ -27,22 +27,22 @@ color = Color(0, 0, 0, 0.55)
 
 [node name="Painel" type="Panel" parent="."]
 anchors_preset = 0
-offset_left = 22.0
-offset_top = 14.0
-offset_right = 378.0
-offset_bottom = 201.0
+offset_left = 8.0
+offset_top = 4.0
+offset_right = 392.0
+offset_bottom = 204.0
 theme_override_styles/panel = SubResource("Estilo_painel")
 
 [node name="Conteudo" type="VBoxContainer" parent="Painel"]
 anchors_preset = 0
-offset_left = 12.0
-offset_top = 9.0
-offset_right = 344.0
-offset_bottom = 171.0
-theme_override_constants/separation = 4
+offset_left = 10.0
+offset_top = 6.0
+offset_right = 374.0
+offset_bottom = 194.0
+theme_override_constants/separation = 3
 
 [node name="Titulo" type="Label" parent="Painel/Conteudo"]
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 11
 horizontal_alignment = 1
 text = "EXPEDIENTE CONCLUÍDO"
 
@@ -50,6 +50,7 @@ text = "EXPEDIENTE CONCLUÍDO"
 theme_override_colors/font_color = Color(0.588235, 0.627451, 0.678431, 1)
 theme_override_font_sizes/font_size = 7
 horizontal_alignment = 1
+autowrap_mode = 2
 text = ""
 
 [node name="Separador" type="HSeparator" parent="Painel/Conteudo"]
@@ -60,7 +61,7 @@ theme_override_font_sizes/font_size = 6
 text = "DESEMPENHO POR QUADRANTE DA MATRIZ DE EISENHOWER"
 
 [node name="Linhas" type="VBoxContainer" parent="Painel/Conteudo"]
-theme_override_constants/separation = 3
+theme_override_constants/separation = 2
 
 [node name="Separador2" type="HSeparator" parent="Painel/Conteudo"]
 
@@ -76,27 +77,46 @@ theme_override_font_sizes/font_size = 6
 horizontal_alignment = 1
 text = ""
 
-[node name="Botoes" type="HBoxContainer" parent="Painel/Conteudo"]
-theme_override_constants/separation = 8
+[node name="Botoes" type="VBoxContainer" parent="Painel/Conteudo"]
+theme_override_constants/separation = 3
+
+[node name="Principal" type="HBoxContainer" parent="Painel/Conteudo/Botoes"]
+theme_override_constants/separation = 6
 alignment = 1
 
-[node name="Proximo" type="Button" parent="Painel/Conteudo/Botoes"]
-custom_minimum_size = Vector2(96, 18)
+[node name="Proximo" type="Button" parent="Painel/Conteudo/Botoes/Principal"]
+custom_minimum_size = Vector2(96, 16)
 theme_override_font_sizes/font_size = 8
 text = "Próximo expediente"
 visible = false
 
-[node name="Repetir" type="Button" parent="Painel/Conteudo/Botoes"]
-custom_minimum_size = Vector2(88, 18)
+[node name="Encerramento" type="Button" parent="Painel/Conteudo/Botoes/Principal"]
+custom_minimum_size = Vector2(104, 16)
+theme_override_font_sizes/font_size = 8
+text = "Ver o encerramento"
+visible = false
+
+[node name="Repetir" type="Button" parent="Painel/Conteudo/Botoes/Principal"]
+custom_minimum_size = Vector2(88, 16)
 theme_override_font_sizes/font_size = 8
 text = "Jogar de novo"
 
-[node name="Ranking" type="Button" parent="Painel/Conteudo/Botoes"]
-custom_minimum_size = Vector2(56, 18)
+[node name="Secundaria" type="HBoxContainer" parent="Painel/Conteudo/Botoes"]
+theme_override_constants/separation = 6
+alignment = 1
+
+[node name="Motivo" type="Button" parent="Painel/Conteudo/Botoes/Secundaria"]
+custom_minimum_size = Vector2(112, 16)
+theme_override_font_sizes/font_size = 8
+text = "Entender o motivo"
+visible = false
+
+[node name="Ranking" type="Button" parent="Painel/Conteudo/Botoes/Secundaria"]
+custom_minimum_size = Vector2(60, 16)
 theme_override_font_sizes/font_size = 8
 text = "Ranking"
 
-[node name="Sair" type="Button" parent="Painel/Conteudo/Botoes"]
-custom_minimum_size = Vector2(64, 18)
+[node name="Sair" type="Button" parent="Painel/Conteudo/Botoes/Secundaria"]
+custom_minimum_size = Vector2(60, 16)
 theme_override_font_sizes/font_size = 8
 text = "Título"

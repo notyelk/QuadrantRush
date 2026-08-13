@@ -22,6 +22,7 @@ const NOTIFICACAO := "notificacao"
 
 const CENA_TAREFA := preload("res://scenes/tasks/tarefa.tscn")
 const CENA_NOTIFICACAO := preload("res://entities/notificacao.tscn")
+const Enunciados := preload("res://scripts/enunciados.gd")
 
 signal chegou(no: Node2D, entrada: Dictionary)
 
@@ -104,7 +105,9 @@ func total_de_notificacoes() -> int:
 ## que é o que torna dois placares comparáveis no ranking da Etapa 7. Misturar as crises
 ## ali faria a mesma fase parecer ter composições diferentes conforme quem jogou.
 func produzir_avulsa(entrada: Dictionary) -> Node2D:
-	return _produzir_tarefa(entrada)
+	# Sem sorteio: uma crise já traz o enunciado que a Q2 adiada virou, e trocá-lo
+	# apagaria a única coisa que liga a crise à tarefa que a originou.
+	return _produzir_tarefa(entrada, false)
 
 
 func _produzir(entrada: Dictionary) -> void:
@@ -115,7 +118,7 @@ func _produzir(entrada: Dictionary) -> void:
 		_produzir_tarefa(entrada)
 
 
-func _produzir_tarefa(entrada: Dictionary) -> Node2D:
+func _produzir_tarefa(entrada: Dictionary, sortear := true) -> Node2D:
 	var pai := get_node_or_null(destino_tarefas)
 	if pai == null:
 		push_warning("Spawner sem destino_tarefas: a agenda não vai aparecer.")
@@ -125,6 +128,14 @@ func _produzir_tarefa(entrada: Dictionary) -> Node2D:
 	tarefa.categoria = int(entrada["categoria"])
 	tarefa.texto = str(entrada.get("texto", ""))
 	tarefa.texto_maduro = str(entrada.get("texto_maduro", ""))
+
+	# Do mesmo saco das tarefas paradas do corredor, embaralhado uma vez por expediente
+	# em FaseBase — é o que impede decorar quais enunciados o dia apresenta.
+	if sortear:
+		var sorteado := Enunciados.sacar(tarefa.categoria)
+		tarefa.texto = sorteado[0]
+		if not tarefa.texto_maduro.is_empty():
+			tarefa.texto_maduro = sorteado[1]
 	tarefa.amplitude = entrada.get("amplitude", Vector2.ZERO)
 	tarefa.periodo = float(entrada.get("periodo", 2.0))
 	tarefa.queda = velocidade_de_queda

@@ -124,6 +124,10 @@ var pontuacao_por_categoria: Dictionary = {}
 ## delegou vs resolveu", que a contagem por categoria sozinha não responde.
 var acoes_por_tipo: Dictionary = {}
 
+## Cada decisão equivocada da partida, na ordem: {categoria, acao, enunciado}. É o que a
+## tela de lição lê para explicar por que aquela tarefa pedia outro tratamento.
+var equivocos: Array[Dictionary] = []
+
 ## Interrupções sofridas (Fase 2). Fora de acoes_por_tipo: não é tarefa da matriz, e
 ## misturá-la ali quebraria a leitura por categoria.
 var interrupcoes: int = 0
@@ -195,9 +199,9 @@ signal foco_mudou(ativo: bool)
 ## nenhuma travessia EXIJA foco, não que toda travessia funcione com ele ligado. Soltar a
 ## tecla está sempre disponível, então não existe estado sem saída.
 const FOCO_VELOCIDADE := 0.65
-## Dobra o raio em que o enunciado da tarefa aparece. A 180 px/s e com raio de 96px o
-## jogador tem 0,53s para ler e decidir; em foco são 192px a 117 px/s, ou seja 1,6s.
-const FOCO_RAIO := 2.0
+## Amplia o raio em que o enunciado da tarefa aparece. A 180 px/s e com raio de 96px o
+## jogador tem 0,53s para ler e decidir; em foco são 264px a 117 px/s, ou seja 2,2s.
+const FOCO_RAIO := 2.75
 
 
 func alternar_foco(ligado: bool) -> void:
@@ -313,10 +317,24 @@ func iniciar_fase(tempo_inicial: float = TEMPO_PADRAO_FASE, dia_da_sessao: int =
 	tempo_mudou.emit(tempo_restante)
 
 
+## Combinações categoria+ação que a matriz classifica como equívoco. Alimentam a tela de
+## lição; não mudam pontuação nenhuma.
+const EQUIVOCOS := {
+	Categoria.URGENTE_IMPORTANTE: [Acao.IGNOROU],
+	Categoria.IMPORTANTE_NAO_URGENTE: [Acao.IGNOROU],
+	Categoria.URGENTE_NAO_IMPORTANTE: [Acao.IGNOROU, Acao.RESOLVER],
+	Categoria.NAO_URGENTE_NAO_IMPORTANTE: [Acao.COLIDIU],
+}
+
+
 ## Aplica o efeito de pontos/tempo definido no Quadro 1 e atualiza os contadores por
 ## categoria, que são o que a tela de resultado e o ranking leem.
+##
+## `enunciado` é só para o relatório: sem o texto da tarefa, a tela de lição conseguiria
+## dizer "você deixou passar três urgentes" e não conseguiria dizer QUAIS.
+##
 ## Retorna o efeito aplicado, para quem quiser mostrar feedback local.
-func registrar_acao(categoria: Categoria, acao: Acao) -> Dictionary:
+func registrar_acao(categoria: Categoria, acao: Acao, enunciado: String = "") -> Dictionary:
 	var pontos := 0
 	var delta_tempo := 0.0
 
@@ -345,6 +363,11 @@ func registrar_acao(categoria: Categoria, acao: Acao) -> Dictionary:
 	if pasta_em_uso and peso > 0:
 		carga_da_pasta += peso
 		carga_mudou.emit(carga_da_pasta)
+
+	if acao in EQUIVOCOS.get(categoria, []):
+		equivocos.append({
+			"categoria": categoria, "acao": acao, "enunciado": enunciado,
+		})
 
 	pontuacao_mudou.emit(pontuacao_total)
 	if delta_tempo != 0.0:
@@ -425,3 +448,4 @@ func _zerar_contadores() -> void:
 	acoes_por_tipo = {}
 	for acao in Acao.values():
 		acoes_por_tipo[acao] = 0
+	equivocos.clear()

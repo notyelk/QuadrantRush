@@ -1192,7 +1192,10 @@ func _cenario_foco() -> void:
 	var base: float = jogador.max_speed * GameManager.fator_da_pasta()
 	_conferir("velocidade cai para 65%",
 		is_equal_approx(jogador.velocidade_atual(), base * 0.65), true)
-	_conferir("e o raio de leitura dobra", GameManager.fator_do_raio(), 2.0)
+	_conferir("e o raio de leitura cresce", GameManager.fator_do_raio(),
+		GameManager.FOCO_RAIO)
+	_conferir("e cresce o bastante para dar tempo de ler",
+		GameManager.FOCO_RAIO >= 2.0, true)
 
 	# A distração fica inerte. Procurada pela categoria na cena de verdade, e não
 	# fabricada: o que precisa ser provado é que a Q4 DA FASE deixa de acertar.

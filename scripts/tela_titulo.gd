@@ -146,6 +146,7 @@ func _mostrar_briefing() -> void:
 	var briefing: Control = CENA_BRIEFING.instantiate()
 	add_child(briefing)
 	briefing.montar(
+		_dia,
 		GameManager.NOME_DO_DIA[_dia],
 		GameManager.TAREFAS_DO_DIA[_dia],
 		int(GameManager.SEGUNDOS_DO_DIA[_dia]),

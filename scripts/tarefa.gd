@@ -71,11 +71,7 @@ const RAIO_ROTULO := 96.0
 ## Recorte do ícone neutro em sprites/PixelOffice/PixelOfficeAssets.png: uma folha de
 ## papel. É o MESMO para os quatro quadrantes, de propósito — se o ícone variasse por
 ## categoria, a cor entregaria a resposta e não haveria classificação nenhuma.
-## Recorte escolhido comparando os candidatos lado a lado num PNG (folha de papel,
-## folha alternativa, pasta cinza e pasta vermelha) — esta é a única que continua
-## legível a 6x9px sobre a parede. As pastas coloridas antigas eram tingidas com a cor
-## do quadrante, o que apagava o desenho interno e as reduzia a um quadradinho de cor:
-## era isso que parecia "PNG quebrado" na tela.
+## É a única folha do pack que continua legível a 6x9px sobre a parede.
 const REGIAO_ICONE := Rect2(192, 107, 6, 9)
 
 ## Cor do ícone e do halo enquanto a tarefa não foi resolvida: papel branco, neutro.
@@ -93,6 +89,7 @@ var _resolvida := false
 var _posicao_base := Vector2.ZERO
 var _fase := 0.0
 var _jogador: Node2D = null
+var _rotulo_visivel := false
 ## Para que lado a fase avança — ver FaseBase.eixo_de_avanco().
 var _eixo := Vector2.RIGHT
 
@@ -106,8 +103,6 @@ func _ready() -> void:
 	_aplicar_visual()
 
 	body_entered.connect(_ao_tocar)
-	proximidade.body_entered.connect(_ao_aproximar)
-	proximidade.body_exited.connect(_ao_afastar)
 
 	var jogadores := get_tree().get_nodes_in_group("Player")
 	if not jogadores.is_empty():
@@ -149,8 +144,8 @@ func _atualizar_rotulo() -> void:
 		return
 
 	var minha := global_position.distance_squared_to(_jogador.global_position)
-	# O raio dobra em modo foco: a 180 px/s com 96px o jogador tem 0,53s para ler e decidir;
-	# a 117 px/s com 192px, 1,6s.
+	# O raio cresce em modo foco: a 180 px/s com 96px o jogador tem 0,53s para ler e
+	# decidir; a 117 px/s com 264px, 2,2s.
 	var raio := RAIO_ROTULO * GameManager.fator_do_raio()
 	# atencao_livre(): interrupção em curso (Fase 2) apaga o enunciado. É o custo real da
 	# notificação — o jogador continua correndo, mas classifica sem poder ler.
@@ -163,6 +158,12 @@ func _atualizar_rotulo() -> void:
 				visivel = false
 				break
 
+	# A faixa do HUD segue o mesmo raio do rótulo do mundo, e não um raio fixo: em foco o
+	# enunciado precisa aparecer nos dois lugares ao mesmo tempo.
+	if visivel and not _rotulo_visivel:
+		get_tree().call_group("hud", "mostrar_dica", "TAREFA", texto, COR_NEUTRA)
+	_rotulo_visivel = visivel
+
 	var alvo := 1.0 if visivel else 0.0
 	if is_equal_approx(rotulo.modulate.a, alvo):
 		return
@@ -173,6 +174,14 @@ func _atualizar_rotulo() -> void:
 
 func esta_resolvida() -> bool:
 	return _resolvida
+
+
+## Troca o enunciado depois de a cena já estar montada (o sorteio da fase roda com as
+## tarefas do corredor já prontas, e escrever em `texto` sozinho não repinta o rótulo).
+func definir_texto(novo: String) -> void:
+	texto = novo
+	if is_node_ready():
+		rotulo.text = texto
 
 
 ## Posição em torno da qual a tarefa oscila. Existe para o teste de geometria: desde que
@@ -199,21 +208,6 @@ func _aplicar_visual() -> void:
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	pulso.tween_property(brilho, "scale", Vector2(0.9, 0.9), 0.7) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-
-
-## Chegar perto mostra o enunciado — no mundo, em cima da tarefa, e na faixa do HUD.
-## O título é genérico ("TAREFA") porque nomear o quadrante aqui seria dar a resposta.
-func _ao_aproximar(corpo: Node2D) -> void:
-	if _resolvida or not corpo.is_in_group("Player") or not GameManager.atencao_livre():
-		return
-	# Quem mostra/esconde o rótulo do mundo é _atualizar_rotulo(), que arbitra entre
-	# tarefas vizinhas. Aqui só a faixa do HUD, e com prioridade normal para não ser
-	# atropelada por avisos de fundo.
-	get_tree().call_group("hud", "mostrar_dica", "TAREFA", texto, COR_NEUTRA)
-
-
-func _ao_afastar(_corpo: Node2D) -> void:
-	pass
 
 
 func _ao_tocar(corpo: Node2D) -> void:
@@ -274,7 +268,7 @@ func assumir() -> void:
 ##               senão ela some, porque foi levada junto com o jogador.
 func _registrar(acao: GameManager.Acao, permanece: bool) -> void:
 	_resolvida = true
-	var efeito := GameManager.registrar_acao(categoria, acao)
+	var efeito := GameManager.registrar_acao(categoria, acao, texto)
 	var cor: Color = GameManager.COR_CATEGORIA[categoria]
 
 	# Desviar de uma distração NÃO gera texto flutuante. É a ação mais frequente da
@@ -310,14 +304,21 @@ func _registrar(acao: GameManager.Acao, permanece: bool) -> void:
 		queue_free()
 		return
 
-	# Fica na tela pintada com a cor do quadrante: é a correção visual do erro, e
-	# deixa o corredor com um rastro do que o jogador tratou mal.
 	_revelar(cor)
 
 
+## Revela o quadrante e some: o papel pisca na cor da categoria e então sobe e some.
+##
+## O nó continua vivo, invisível — a contagem de chegadas do Dia 2 varre as tarefas da
+## cena, e sumir da árvore mudaria o que ela conta.
 func _revelar(cor: Color) -> void:
 	colisor.set_deferred("disabled", true)
-	icone.modulate = Color(cor.r, cor.g, cor.b, 0.5)
+	proximidade.set_deferred("monitoring", false)
+	icone.modulate = cor
 	brilho.visible = false
-	var sumir := create_tween()
-	sumir.tween_property(rotulo, "modulate:a", 0.0, 0.2)
+
+	var saida := create_tween().set_parallel(true)
+	saida.tween_property(rotulo, "modulate:a", 0.0, 0.2)
+	saida.tween_property(icone, "position:y", icone.position.y - 12.0, 0.6) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	saida.tween_property(icone, "modulate:a", 0.0, 0.6).set_delay(0.3)

@@ -16,10 +16,14 @@ extends CanvasLayer
 ## Emitido quando a tela é fechada estando sobreposta. Quem abriu se encarrega do resto.
 signal fechado
 
+const Encaixe := preload("res://scripts/encaixe.gd")
+
 ## Ligado por quem instancia a cena por cima de outra. Standalone (aberta pelo título),
 ## o botão Voltar troca de cena; sobreposta, ela só se remove.
 var sobreposto := false
 
+@onready var painel: Control = $Painel
+@onready var conteudo: VBoxContainer = $Painel/Conteudo
 @onready var origem: Label = $Painel/Conteudo/Origem
 @onready var lista_dias: HBoxContainer = $Painel/Conteudo/Dias
 @onready var linhas: VBoxContainer = $Painel/Conteudo/Linhas
@@ -103,14 +107,23 @@ func _ao_receber(dados: Array, de_onde: String) -> void:
 		origem.add_theme_color_override("font_color", Color("ffb347"))
 
 	for filho in linhas.get_children():
+		linhas.remove_child(filho)
 		filho.queue_free()
 
 	if dados.is_empty():
 		_vazio()
+		_encaixar()
 		return
 
 	for i in dados.size():
 		_adicionar(i + 1, dados[i] as Dictionary)
+	_encaixar()
+
+
+## Dez colocados não cabem no painel sem encolher o conjunto.
+func _encaixar() -> void:
+	await get_tree().process_frame
+	Encaixe.no_painel(painel, conteudo, 6.0)
 
 
 func _vazio() -> void:

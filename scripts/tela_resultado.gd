@@ -2,26 +2,30 @@ extends CanvasLayer
 
 ## Tela de fim de expediente — Etapa 6 ("tela de resultado").
 ##
-## O ponto central dela não é o placar: é a LEITURA POR QUADRANTE. O checklist
-## institucional exige "notas por categoria de tarefa, não só um placar agregado"
-## (ex.: quantas Q1 acertou, quantas Q3 delegou), e é aqui que isso aparece.
-## Também é o material direto da seção de Resultados do TCC — é esta tela que se
-## fotografa para mostrar o retorno pedagógico do jogo.
+## O ponto central dela não é o placar: é a LEITURA POR QUADRANTE, exigida pelo checklist
+## institucional ("notas por categoria de tarefa, não só um placar agregado").
 ##
 ## Roda com process_mode ALWAYS porque a árvore fica pausada enquanto ela está
 ## visível; sem isso os botões não responderiam.
 
 const CENA_RANKING := preload("res://scenes/ui/tela_ranking.tscn")
+const CENA_LICAO := preload("res://scenes/ui/tela_licao.tscn")
+const CENA_FINAL := preload("res://scenes/ui/tela_final.tscn")
+const Encaixe := preload("res://scripts/encaixe.gd")
 
+@onready var painel: Control = $Painel
+@onready var conteudo: VBoxContainer = $Painel/Conteudo
 @onready var titulo: Label = $Painel/Conteudo/Titulo
 @onready var subtitulo: Label = $Painel/Conteudo/Subtitulo
 @onready var linhas: VBoxContainer = $Painel/Conteudo/Linhas
 @onready var total: Label = $Painel/Conteudo/Total
 @onready var envio: Label = $Painel/Conteudo/Envio
-@onready var botao_repetir: Button = $Painel/Conteudo/Botoes/Repetir
-@onready var botao_proximo: Button = $Painel/Conteudo/Botoes/Proximo
-@onready var botao_ranking: Button = $Painel/Conteudo/Botoes/Ranking
-@onready var botao_sair: Button = $Painel/Conteudo/Botoes/Sair
+@onready var botao_repetir: Button = $Painel/Conteudo/Botoes/Principal/Repetir
+@onready var botao_proximo: Button = $Painel/Conteudo/Botoes/Principal/Proximo
+@onready var botao_encerramento: Button = $Painel/Conteudo/Botoes/Principal/Encerramento
+@onready var botao_motivo: Button = $Painel/Conteudo/Botoes/Secundaria/Motivo
+@onready var botao_ranking: Button = $Painel/Conteudo/Botoes/Secundaria/Ranking
+@onready var botao_sair: Button = $Painel/Conteudo/Botoes/Secundaria/Sair
 
 ## Composição da fase, informada pela fase: quantas tarefas de cada categoria
 ## existiam. Sem isso não dá para dizer "3 de 4" — só "3".
@@ -31,6 +35,8 @@ var disponiveis: Dictionary = {}
 func _ready() -> void:
 	botao_repetir.pressed.connect(_ao_repetir)
 	botao_proximo.pressed.connect(_ao_proximo)
+	botao_encerramento.pressed.connect(_ao_encerramento)
+	botao_motivo.pressed.connect(_ao_motivo)
 	botao_ranking.pressed.connect(_ao_ranking)
 	botao_sair.pressed.connect(_ao_sair)
 	botao_repetir.grab_focus()
@@ -42,29 +48,21 @@ func _ready() -> void:
 ## do TCC lista o que pontua, e ele está protocolado) mas que precisa aparecer no
 ## relatório. Guardar isso no GameManager sujaria a leitura por categoria, que é
 ## exatamente o que o checklist institucional exige que fique limpo.
-func montar(vitoria: bool, composicao: Dictionary, extras: Array = []) -> void:
+func montar(vitoria: bool, composicao: Dictionary, extras: Array = [], fecho: Array = []) -> void:
 	disponiveis = composicao
 
-	# Nomear quem jogou é o que liga esta tela ao ranking da Etapa 7 — e rende um
-	# print melhor para a seção de Resultados do TCC.
-	var quem := Perfil.nickname if not Perfil.nickname.is_empty() else "Você"
-
 	var nome_do_dia: String = GameManager.NOME_DO_DIA.get(GameManager.dia, "")
+	var frases := fecho if fecho.size() >= 2 else _fecho_generico(vitoria)
 
-	if vitoria:
-		titulo.text = "EXPEDIENTE CONCLUÍDO"
-		titulo.add_theme_color_override("font_color", Color("8fd6a8"))
-		subtitulo.text = "%s — %s saiu no horário, com %s de sobra." % [
-			nome_do_dia, quem, _formatar(GameManager.tempo_restante)
-		]
-	else:
-		titulo.text = "TEMPO ESGOTADO"
-		titulo.add_theme_color_override("font_color", Color("ff6b6b"))
-		subtitulo.text = "%s — o expediente acabou antes de %s chegar ao elevador." % [
-			nome_do_dia, quem
-		]
+	titulo.text = String(frases[0])
+	titulo.add_theme_color_override(
+		"font_color", Color("8fd6a8") if vitoria else Color("ff6b6b")
+	)
+	subtitulo.text = "%s — %s" % [nome_do_dia, frases[1]]
 
 	_preparar_proximo_dia(vitoria)
+	# Só aparece se houve o que explicar.
+	botao_motivo.visible = not GameManager.equivocos.is_empty()
 
 	for filho in linhas.get_children():
 		filho.queue_free()
@@ -80,6 +78,26 @@ func montar(vitoria: bool, composicao: Dictionary, extras: Array = []) -> void:
 	total.text = "PONTUAÇÃO FINAL:  %d pts" % GameManager.pontuacao_total
 	_registrar_no_ranking()
 	_animar_entrada()
+	_encaixar()
+
+
+## Usado quando a fase não informa o próprio fecho.
+func _fecho_generico(vitoria: bool) -> Array:
+	var quem := Perfil.nickname if not Perfil.nickname.is_empty() else "Você"
+	if vitoria:
+		return [
+			"EXPEDIENTE CONCLUÍDO",
+			"%s saiu no horário, com %s de sobra." % [
+				quem, _formatar(GameManager.tempo_restante)
+			],
+		]
+	return ["DIA PERDIDO", "o expediente acabou antes de %s chegar ao elevador." % quem]
+
+
+## O relatório cresce com a partida: extras da fase, linha de interrupções.
+func _encaixar() -> void:
+	await get_tree().process_frame
+	Encaixe.no_painel(painel, conteudo, 6.0)
 
 
 ## Etapa 7: é aqui, e só aqui, que a partida vai para a nuvem — "grava nickname,
@@ -222,9 +240,15 @@ func _preparar_proximo_dia(vitoria: bool) -> void:
 	botao_proximo.visible = vitoria and existe
 	if botao_proximo.visible:
 		# Só o número do dia: o nome inteiro ("Dia 2 · O dia das interrupções") estourava
-		# a largura do botão e empurrava a fileira para fora do painel de 356px.
+		# a largura do botão e empurrava a fileira para fora do painel.
 		botao_proximo.text = "Ir para o Dia %d" % proximo
 		botao_proximo.grab_focus()
+
+	# Vencer o último expediente é o fim do jogo, e não mais um resultado igual aos
+	# outros: o encerramento é onde a teoria que o jogo aplicou vira texto.
+	botao_encerramento.visible = vitoria and not existe
+	if botao_encerramento.visible:
+		botao_encerramento.grab_focus()
 
 
 func _adicionar(categoria: int, detalhe: String, pontos: int) -> void:
@@ -286,13 +310,26 @@ func _ao_proximo() -> void:
 	get_tree().change_scene_to_file(GameManager.CENA_DO_DIA[proximo])
 
 
-## O ranking entra POR CIMA do resultado, não no lugar dele. Trocar de cena aqui apagaria
-## a leitura por quadrante que o jogador acabou de receber — e é ela, não o placar, o
-## momento pedagógico da partida.
+## O ranking entra POR CIMA do resultado, não no lugar dele: trocar de cena apagaria a
+## leitura por quadrante que o jogador acabou de receber.
 func _ao_ranking() -> void:
 	Audio.tocar("ui")
 	var tela := CENA_RANKING.instantiate()
 	tela.sobreposto = true
+	tela.fechado.connect(func() -> void: botao_repetir.grab_focus())
+	add_child(tela)
+
+
+func _ao_motivo() -> void:
+	Audio.tocar("ui")
+	var tela := CENA_LICAO.instantiate()
+	tela.fechado.connect(func() -> void: botao_repetir.grab_focus())
+	add_child(tela)
+
+
+func _ao_encerramento() -> void:
+	Audio.tocar("ui")
+	var tela := CENA_FINAL.instantiate()
 	tela.fechado.connect(func() -> void: botao_repetir.grab_focus())
 	add_child(tela)
 

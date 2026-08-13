@@ -76,6 +76,14 @@ func despachar() -> void:
 	Audio.tocar("delegar")
 
 
+## A Q3 dele foi resolvida no chão: ele apaga, para deixar de parecer um convite.
+func dispensar() -> void:
+	if estado != Estado.SENTADO:
+		return
+	var apagar := create_tween()
+	apagar.tween_property(self, "modulate:a", 0.35, 0.3)
+
+
 func esta_a_caminho() -> bool:
 	return estado == Estado.DESCENDO or estado == Estado.ANDANDO
 

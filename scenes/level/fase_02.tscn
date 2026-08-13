@@ -1,4 +1,4 @@
-[gd_scene load_steps=24 format=3]
+[gd_scene load_steps=25 format=3]
 
 [ext_resource type="Script" path="res://scripts/fase_02.gd" id="script_fase"]
 [ext_resource type="Script" path="res://scripts/spawner_tarefas.gd" id="script_spawner"]
@@ -33,6 +33,9 @@ size = Vector2(80, 16)
 
 [sub_resource type="RectangleShape2D" id="Shape_48x16"]
 size = Vector2(48, 16)
+
+[sub_resource type="RectangleShape2D" id="Shape_16x624"]
+size = Vector2(16, 624)
 
 [sub_resource type="RectangleShape2D" id="Shape_8x56"]
 size = Vector2(8, 56)
@@ -398,6 +401,18 @@ position = Vector2(1904, 136)
 shape = SubResource("Shape_64x16")
 disabled = true
 
+[node name="BordaEsquerda" type="StaticBody2D" parent="Colisores"]
+position = Vector2(-8, 104)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Colisores/BordaEsquerda"]
+shape = SubResource("Shape_16x624")
+
+[node name="BordaDireita" type="StaticBody2D" parent="Colisores"]
+position = Vector2(2824, 104)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Colisores/BordaDireita"]
+shape = SubResource("Shape_16x624")
+
 [node name="Camera" parent="." instance=ExtResource("cena_camera")]
 position = Vector2(48, 160)
 limit_left = 0
@@ -513,13 +528,13 @@ visual = NodePath("../../EscadaTiles")
 [node name="Colegas" type="Node2D" parent="."]
 
 [node name="Colega0" parent="Colegas" instance=ExtResource("cena_colega")]
-position = Vector2(962, 128)
+position = Vector2(962, 112)
 alvo = NodePath("../../Delegacoes/PonteDoVao")
 velocidade = 140.0
 chao_y = 176.0
 
 [node name="Colega1" parent="Colegas" instance=ExtResource("cena_colega")]
-position = Vector2(1186, 128)
+position = Vector2(1186, 112)
 alvo = NodePath("../../Delegacoes/EscadaDoArquivo")
 velocidade = 140.0
 chao_y = 176.0

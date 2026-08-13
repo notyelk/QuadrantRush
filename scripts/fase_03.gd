@@ -117,6 +117,21 @@ func abertura() -> Array:
 	]
 
 
+## Aqui o relógio zerado é vitória e quem derruba é a pilha, então o fecho não pode falar
+## em tempo esgotado nem em elevador.
+func fecho(vitoria: bool) -> Array:
+	var quem := Perfil.nickname if not Perfil.nickname.is_empty() else "Você"
+	if vitoria:
+		return [
+			"VOCÊ AGUENTOU ATÉ O FIM",
+			"%s atravessou a reunião de encerramento sem ser soterrado." % quem,
+		]
+	return [
+		"SOTERRADO PELAS PENDÊNCIAS",
+		"a pilha tomou a sala antes de %s vencer o relógio. O dia foi perdido." % quem,
+	]
+
+
 func extras_do_resultado() -> Array:
 	return [
 		["Pilha de pendências", "%d de %d" % [pilha.unidades, Pilha.SOTERRA]],

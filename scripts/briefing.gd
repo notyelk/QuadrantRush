@@ -2,23 +2,51 @@ extends Control
 
 ## A pauta do dia, mostrada ANTES do expediente começar — Etapa 6 (interface).
 ##
-## A faixa do HUD não serve para explicar a fase: ela sobe junto com o cronômetro e some
-## em segundos. Como a mecânica central é LER a tarefa e decidir, isso precisa estar dito
-## antes de o relógio começar.
+## Fica ENTRE a tela de título e a fase, e não dentro dela: dentro, teria de pausar a
+## árvore no _ready, e as suítes de teste esbarrariam num painel modal.
 ##
-## Fica ENTRE a tela de título e a fase, e não dentro dela. Isso é decisão de projeto,
-## não acaso: se ele vivesse dentro da fase, teria de pausar a árvore no _ready, e as
-## quatro suítes de teste (que instanciam a fase e dirigem o jogador quadro a quadro)
-## passariam a esbarrar num painel modal. Aqui a fase continua exatamente como os testes
-## a conhecem.
-##
-## Também não tem tempo para sumir sozinho. Quem fecha é o jogador.
+## Não some sozinho. Quem fecha é o jogador.
 
 signal fechado
 
+## Os comandos e as regras de cada dia. O Dia 3 tem outro verbo — lá não se encosta em
+## nada, carrega-se um papel por vez até o canto certo — e anunciar as regras do corredor
+## naquela arena ensinaria o controle errado.
+const PAUTA := {
+	1: {
+		"regras": [
+			["ENCOSTAR  =  faço agora", "8fd6a8"],
+			["PASSAR DIRETO  =  deixo para lá", "f2c14e"],
+			["SUBIR NA BANDEJA DO COLEGA  =  delego", "5aa9e6"],
+			["SEGURAR SHIFT  =  me concentro (leio de longe, mas ando devagar)", "74a4f1"],
+		],
+		"alerta": "O elevador só abre com todas as urgentes resolvidas.",
+	},
+	2: {
+		"regras": [
+			["ENCOSTAR  =  faço agora", "8fd6a8"],
+			["PASSAR DIRETO  =  deixo para lá", "f2c14e"],
+			["SUBIR NA BANDEJA DO COLEGA  =  delego", "5aa9e6"],
+			["SEGURAR SHIFT  =  me concentro (leio de longe, mas ando devagar)", "74a4f1"],
+		],
+		"alerta": "As tarefas chegam sozinhas, e o que você adiar volta como urgência.",
+	},
+	3: {
+		"regras": [
+			["ENCOSTAR NUM PAPEL  =  pego (um por vez)", "8fd6a8"],
+			["POUSAR NUM CANTO  =  classifico naquele quadrante", "5aa9e6"],
+			["S ou SETA PARA BAIXO  =  largo o papel", "f2c14e"],
+			["SEGURAR SHIFT  =  me concentro (leio de longe, mas ando devagar)", "74a4f1"],
+		],
+		"alerta": "Sobreviva ao expediente. Quem derruba você é a pilha de pendências.",
+	},
+}
+
 @onready var titulo: Label = $Painel/Conteudo/Titulo
 @onready var resumo: Label = $Painel/Conteudo/Resumo
+@onready var instrucao: Label = $Painel/Conteudo/Instrucao
 @onready var regras: VBoxContainer = $Painel/Conteudo/Regras
+@onready var alerta: Label = $Painel/Conteudo/Alerta
 @onready var continuar: Label = $Painel/Conteudo/Continuar
 
 var _pronto := false
@@ -32,11 +60,29 @@ func _ready() -> void:
 	continuar.visible = true
 
 
-func montar(nome_do_dia: String, total_de_tarefas: int, segundos: int) -> void:
+func montar(dia: int, nome_do_dia: String, total_de_tarefas: int, segundos: int) -> void:
 	titulo.text = nome_do_dia.to_upper()
 	resumo.text = "%d tarefas na sua mesa. %d segundos de expediente.\nNão vai dar para todas." % [
 		total_de_tarefas, segundos,
 	]
+
+	var pauta: Dictionary = PAUTA.get(dia, PAUTA[1])
+	instrucao.text = (
+		"Cada papel é uma tarefa. Chegue perto para ler o que é, e responda com o corpo:"
+	)
+	alerta.text = str(pauta["alerta"])
+
+	for filho in regras.get_children():
+		regras.remove_child(filho)
+		filho.queue_free()
+	for regra in pauta["regras"]:
+		var linha := Label.new()
+		linha.text = str(regra[0])
+		linha.add_theme_font_size_override("font_size", 7)
+		linha.add_theme_color_override("font_color", Color(str(regra[1])))
+		linha.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		linha.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		regras.add_child(linha)
 
 
 func _unhandled_input(evento: InputEvent) -> void:

@@ -22,6 +22,7 @@ const TEMPO_CRITICO := 15.0
 
 const CENA_RESULTADO := preload("res://scenes/ui/tela_resultado.tscn")
 const CENA_PAUSA := preload("res://scenes/ui/menu_pausa.tscn")
+const Enunciados := preload("res://scripts/enunciados.gd")
 
 ## Qual efeito toca para cada ação da matriz. Tabela em vez de match espalhado: a
 ## lista de ações é fechada (é o Quadro 1), e vê-la inteira num lugar só torna óbvio
@@ -159,6 +160,28 @@ func extras_do_resultado() -> Array:
 	return []
 
 
+## Título e frase da tela de resultado: [titulo, texto].
+##
+## Fica na fase porque perder não quer dizer a mesma coisa em toda parte — no Dia 3 o
+## relógio zerado é vitória, e anunciar "tempo esgotado" lá diria o contrário do que
+## aconteceu.
+func fecho(vitoria: bool) -> Array:
+	var quem := Perfil.nickname if not Perfil.nickname.is_empty() else "Você"
+	if vitoria:
+		return [
+			"EXPEDIENTE CONCLUÍDO",
+			"%s saiu no horário, com %s de sobra." % [quem, _relogio(GameManager.tempo_restante)],
+		]
+	return [
+		"DIA PERDIDO",
+		"o expediente acabou antes de %s chegar ao elevador." % quem,
+	]
+
+
+func _relogio(segundos: float) -> String:
+	return "%02d:%02d" % [int(segundos) / 60, int(segundos) % 60]
+
+
 ## Os trechos em que o expediente se divide, anunciados ao jogador quando ele entra em
 ## cada um: [{"em": progresso, "nome": String, "dica": String}], em ordem.
 ##
@@ -179,6 +202,28 @@ func _atualizar(_delta: float) -> void:
 	pass
 
 
+## Troca o enunciado de cada tarefa parada do corredor por um sorteado do mesmo quadrante.
+##
+## As tarefas que CAEM (Dia 2) sacam do mesmo saco na hora de nascer, em
+## spawner_tarefas.gd — por isso o embaralhamento acontece antes de _preparar().
+func _sortear_enunciados() -> void:
+	for tarefa in tarefas.get_children():
+		if not "categoria" in tarefa:
+			continue
+		var sorteado := Enunciados.sacar(int(tarefa.categoria))
+		# Só a tarefa que já amadurecia continua amadurecendo: ligar a maturação numa
+		# fase que não a tem mudaria a composição do dia.
+		if not String(tarefa.texto_maduro).is_empty():
+			tarefa.texto_maduro = sorteado[1]
+		tarefa.definir_texto(sorteado[0])
+
+	for bifurcacao in bifurcacoes.get_children():
+		if bifurcacao.has_method("definir_texto"):
+			bifurcacao.definir_texto(
+				Enunciados.sacar(GameManager.Categoria.URGENTE_NAO_IMPORTANTE)[0]
+			)
+
+
 # Orquestração comum
 
 func _ready() -> void:
@@ -191,7 +236,9 @@ func _ready() -> void:
 	_progresso_inicial = progresso(jogador.global_position)
 	_progresso_final = progresso(saida.global_position)
 
+	Enunciados.embaralhar()
 	_preparar()
+	_sortear_enunciados()
 	composicao = _mapear_composicao()
 
 	for area in checkpoints.get_children():
@@ -427,6 +474,6 @@ func _ao_terminar_fase(vitoria: bool) -> void:
 
 	var tela := CENA_RESULTADO.instantiate()
 	add_child(tela)
-	tela.montar(vitoria, composicao, extras_do_resultado())
+	tela.montar(vitoria, composicao, extras_do_resultado(), fecho(vitoria))
 	# Pausa depois de montar: a tela roda com process_mode ALWAYS, o resto da fase não.
 	get_tree().paused = true

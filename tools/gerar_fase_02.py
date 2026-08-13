@@ -132,12 +132,12 @@ DIANTEIRA_COLEGA = 1.0
 
 COLEGAS = [
     {
-        "bifurcacao": 0, "x": 962, "y": 128, "nome": "PonteDoVao",
+        "bifurcacao": 0, "x": 962, "y": 112, "nome": "PonteDoVao",
         "alvo_x": 1400, "tipo": "perto", "corpo": "Ponte", "visual": "PonteTiles",
         "mensagem": "O colega estendeu a passarela sobre o vão",
     },
     {
-        "bifurcacao": 1, "x": 1186, "y": 128, "nome": "EscadaDoArquivo",
+        "bifurcacao": 1, "x": 1186, "y": 112, "nome": "EscadaDoArquivo",
         "alvo_x": 1904, "tipo": "longe", "corpo": "Escada", "visual": "EscadaTiles",
         "mensagem": "O colega baixou a escada do arquivo",
     },
@@ -400,6 +400,13 @@ def validar() -> None:
             problemas.append(
                 "%s nasce em y=%d, fora da altura do gatilho (centro %d)"
                 % (c["nome"], c["y"], centro_gatilho))
+        # E ele tem de POUSAR no topo da bandeja: dentro dela, aparece enterrado.
+        topos = [linha * T for i, f, linha in PLATAFORMAS
+                 if i * T <= c["x"] <= f * T]
+        if c["y"] not in topos:
+            problemas.append(
+                "%s nasce em y=%d, que nao e o topo de nenhuma plataforma sob ele (%s)"
+                % (c["nome"], c["y"], topos))
 
     # 7. A Q2 do alto do arquivo tem de ser INALCANCAVEL sem a escada delegada -- e o que
     #    garante que nao existe pontuacao maxima sem delegar. Sem esta conta a promessa
@@ -578,6 +585,10 @@ def main() -> None:
         largura = (fim - inicio) * T
         cx = inicio * T + largura // 2
         colisores.append((nome, cx, linha * T + 8, forma(largura, 16), False))
+
+    # Fecha as duas pontas do corredor: a camera tem limite, o corpo do jogador nao.
+    for nome, cx in [("BordaEsquerda", -8), ("BordaDireita", LARGURA + 8)]:
+        colisores.append((nome, cx, ALTURA // 2, forma(16, ALTURA * 3), True))
 
     forma_checkpoint = forma(8, 56)
     forma_queda = forma(LARGURA, 60)

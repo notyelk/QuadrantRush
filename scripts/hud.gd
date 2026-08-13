@@ -45,6 +45,8 @@ var _pontos_exibidos := 0.0
 var _pontos_alvo := 0
 ## A dica da pasta aparece uma vez por partida, quando ela passa a doer.
 var _ensinou_pasta := false
+## Carga do quadro anterior, para saber se o peso subiu ou foi entregue.
+var _carga_anterior := 0
 
 
 func _ready() -> void:
@@ -275,6 +277,13 @@ func mostrar_pasta(ativo: bool) -> void:
 func _ao_mudar_carga(carga: int) -> void:
 	if not rotulo_pasta.visible:
 		return
+
+	# Um contador que só troca de número passa despercebido no canto da tela. O salto
+	# marca o instante em que o peso mudou, que é a informação que o jogador precisa
+	# ligar à tarefa que acabou de fazer.
+	_pulsar_pasta(Color("8fd6a8") if carga < _carga_anterior else Color("e0a35c"))
+	_carga_anterior = carga
+
 	if carga <= 0:
 		rotulo_pasta.text = "Pasta vazia"
 		rotulo_pasta.add_theme_color_override("font_color", Color("b9c0e0"))
@@ -297,6 +306,17 @@ func _ao_mudar_carga(carga: int) -> void:
 	var saturada := carga >= GameManager.PASTA_LIMITE
 	rotulo_pasta.add_theme_color_override(
 		"font_color", Color("e0a35c") if saturada else Color("b9c0e0"))
+
+
+## Salto do contador da pasta, com um lampejo na cor do que aconteceu: âmbar quando o
+## peso sobe, verde quando ele é entregue.
+func _pulsar_pasta(cor: Color) -> void:
+	rotulo_pasta.pivot_offset = rotulo_pasta.size * 0.5
+	rotulo_pasta.add_theme_color_override("font_color", cor)
+
+	var salto := create_tween()
+	salto.tween_property(rotulo_pasta, "scale", Vector2(1.35, 1.35), 0.08) 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	salto.tween_property(rotulo_pasta, "scale", Vector2.ONE, 0.18) 		.set_trans(Tween.TRANS_SINE)
 
 
 ## Visão de túnel enquanto o jogador está concentrado.

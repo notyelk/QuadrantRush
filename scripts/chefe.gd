@@ -50,9 +50,9 @@ const TELEGRAFO_POR_ATAQUE := {
 ## sorteio. Ver MOMENTOS_DA_ENXURRADA.
 const ATAQUES_POR_FASE := [
 	[],
-	["onda"],
-	["onda", "ligacao", "ocupar", "reorganizar"],
-	["onda", "ligacao", "ocupar", "reorganizar"],
+	["ligacao"],
+	["ligacao", "ocupar", "reorganizar"],
+	["ligacao", "ocupar", "reorganizar"],
 ]
 
 ## Em que segundos da ÚLTIMA fase o e-mail em cópia despeja a reserva de Q4.

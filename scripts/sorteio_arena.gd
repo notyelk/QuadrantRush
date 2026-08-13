@@ -189,9 +189,9 @@ static func _desenhar(rng: RandomNumberGenerator) -> Dictionary:
 		cantos[categoria] = Vector2(roundf(p.x / 8.0) * 8.0, p.y)
 
 	var degraus: Array[Rect2] = []
-	for x in _escolher(rng, CANDIDATOS_DEGRAU_ESQ, 2):
+	for x in _escolher(rng, CANDIDATOS_DEGRAU_ESQ, 2, LARGURA_DEGRAU):
 		degraus.append(Rect2(x, Y_DEGRAU, LARGURA_DEGRAU, 16))
-	for x in _escolher(rng, CANDIDATOS_DEGRAU_DIR, 2):
+	for x in _escolher(rng, CANDIDATOS_DEGRAU_DIR, 2, LARGURA_DEGRAU):
 		degraus.append(Rect2(x, Y_DEGRAU, LARGURA_DEGRAU, 16))
 
 	var layout := {
@@ -205,16 +205,31 @@ static func _desenhar(rng: RandomNumberGenerator) -> Dictionary:
 	return layout
 
 
-## Tira `quantos` valores distintos da lista, sem alterar a original.
-static func _escolher(rng: RandomNumberGenerator, fonte: Array[float], quantos: int) -> Array[float]:
+## Tira `quantos` valores distintos da lista, separados por pelo menos `distancia`.
+##
+## A separação existe porque dois degraus de 48px sorteados a 16px um do outro viram um
+## bloco único de 64px: o jogador vê uma plataforma onde o desenho previa duas rotas, e os
+## pontos de pouso das duas se empilham no mesmo lugar.
+static func _escolher(
+	rng: RandomNumberGenerator, fonte: Array[float], quantos: int, distancia := 0.0
+) -> Array[float]:
 	var copia := fonte.duplicate()
 	var saida: Array[float] = []
 	for _i in quantos:
-		if copia.is_empty():
+		var possiveis: Array[float] = []
+		for valor in copia:
+			var cabe := true
+			for ja in saida:
+				if absf(valor - ja) < distancia:
+					cabe = false
+					break
+			if cabe:
+				possiveis.append(valor)
+		if possiveis.is_empty():
 			break
-		var indice := rng.randi_range(0, copia.size() - 1)
-		saida.append(copia[indice])
-		copia.remove_at(indice)
+		var escolhido: float = possiveis[rng.randi_range(0, possiveis.size() - 1)]
+		saida.append(escolhido)
+		copia.erase(escolhido)
 	saida.sort()
 	return saida
 
@@ -228,9 +243,12 @@ static func _escolher(rng: RandomNumberGenerator, fonte: Array[float], quantos: 
 static func _sortear_pousos(rng: RandomNumberGenerator, layout: Dictionary) -> Array[Vector2]:
 	var candidatos: Array[Vector2] = []
 
+	# O piso só é piso onde não há pedestal por cima: os dois blocos descem do topo deles
+	# até o chão, e um papel pousado ali nasce dentro da pedra, invisível e inalcançável.
 	var x := 48.0
 	while x <= LARGURA - 48.0:
-		candidatos.append(Vector2(x, Y_CHAO))
+		if not (_dentro(PEDESTAL_ESQ, x) or _dentro(PEDESTAL_DIR, x)):
+			candidatos.append(Vector2(x, Y_CHAO))
 		x += 12.0
 
 	for plataforma in [MEZANINO_ESQ, MEZANINO_DIR, PEDESTAL_ESQ, PEDESTAL_DIR]:

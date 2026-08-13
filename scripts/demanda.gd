@@ -32,10 +32,15 @@ extends Area2D
 ## ao pegar abriria uma saída da fase inteira: segurar uma urgente o expediente todo sem
 ## custo nenhum. Trabalho em andamento também vence, e é isso que torna "pegar" uma
 ## decisão em vez de um reflexo.
-@export var validade := 8.0
+@export var validade := 11.0
 
 const VELOCIDADE_QUEDA := 150.0
 const RAIO_ROTULO := 96.0
+
+## Quanto o papel fica acima da superfície em que pousa, e até onde a sonda de queda
+## procura chão.
+const ALTURA_SOBRE_O_CHAO := 10.0
+const ALCANCE_DA_SONDA := 400.0
 
 ## Deriva das Q4 em direção ao jogador. Distração não espera ser procurada — ela vem
 ## atrás de você. É de propósito que só o quadrante 4 se move: nas Fases 1 e 2 TODAS as
@@ -190,7 +195,23 @@ func largar() -> void:
 	colisor.set_deferred("disabled", false)
 	z_index = 3
 	_base_x = position.x
-	_caiu = true
+	# Cai até a superfície que estiver embaixo, em vez de ficar parado no ar onde o
+	# jogador estava. Largar de cima de um vão devolve o papel ao chão.
+	pousa = _superficie_abaixo()
+	_caiu = position.y >= pousa
+
+
+## Altura de pouso logo acima do primeiro corpo sólido abaixo do papel. Sem nada embaixo,
+## fica onde está — melhor um papel parado do que um papel caindo para fora da arena.
+func _superficie_abaixo() -> float:
+	var consulta := PhysicsRayQueryParameters2D.create(
+		global_position, global_position + Vector2(0, ALCANCE_DA_SONDA)
+	)
+	consulta.collision_mask = 1
+	var achou := get_world_2d().direct_space_state.intersect_ray(consulta)
+	if achou.is_empty():
+		return position.y
+	return position.y + (float(achou["position"].y) - global_position.y) - ALTURA_SOBRE_O_CHAO
 
 
 ## Aplica o Quadro 1 e tira o papel de cena. Ponto único por onde toda ação passa.

@@ -11,11 +11,12 @@ extends CharacterBody2D
 ##   RECUO     recua depois de acertar
 ##
 ## Três limites impedem que vire punição sem saída: velocidade máxima abaixo da do
-## jogador correndo (96 contra 180px/s); empurrão sempre para LONGE do urso; e hesitação
+## jogador correndo (120 contra 180px/s); empurrão sempre para LONGE do urso; e hesitação
 ## medida pelo avanço máximo já alcançado, não pela velocidade instantânea.
 ##
 ## Alcançar custa tempo, não pontos, e passa por descontar_tempo(), fora das notas por
-## categoria. Não colide com o mundo e não sobe: plataforma alta é área segura.
+## categoria. Não colide com o mundo: ele sobe atrás do jogador até `teto_de_subida`, e
+## acima disso a altura continua sendo área segura.
 
 ## Emitido quando ele encosta no jogador. Existe para o teste automatizado poder
 ## afirmar o alcance sem depender de quantos frames o headless rodou.
@@ -46,21 +47,33 @@ const MOVIMENTO_MINIMO := 0.01
 ## em cima do jogador ficaria tremendo de um lado para o outro a cada quadro.
 const ZONA_MORTA := 4.0
 
+## Quanto a origem do jogador fica acima da superfície em que ele pisa.
+const ALTURA_DOS_PES := 17.0
+
 @export_group("Ritmo")
 ## Segundos de sono antes de acordar. É a janela em que o jogador lê a dica de
 ## abertura sem já estar sendo caçado.
 @export var atraso_para_acordar: float = 3.0
 ## Velocidade de cruzeiro. Calibragem: a fase tem 2624px e 90s de expediente, ou
-## seja o jogador precisa manter ~29px/s de avanço médio. 34px/s fica pouco acima —
+## seja o jogador precisa manter ~29px/s de avanço médio. 44px/s fica acima disso —
 ## quem joga no ritmo mínimo o sente na nuca; quem prioriza bem abre distância.
-@export var velocidade_base: float = 34.0
+@export var velocidade_base: float = 44.0
 ## Teto de velocidade quando ele está muito atrás (ver _velocidade_de_caca). Fica
 ## abaixo dos 180px/s do jogador correndo: ele alcança quem para, nunca quem corre.
-@export var velocidade_maxima: float = 96.0
+@export var velocidade_maxima: float = 120.0
 ## Distância a partir da qual ele começa a acelerar para não virar irrelevante.
 @export var folga_confortavel: float = 260.0
 ## Distância em que ele já está em velocidade máxima de recuperação.
 @export var folga_maxima: float = 620.0
+
+@export_group("Subida")
+## Ele acompanha o jogador na vertical, mas só até aqui (y do mundo; menor é mais alto).
+## O mezanino do Dia 1 fica acima deste teto e continua sendo área segura: é lá que moram
+## as tarefas importantes e não urgentes, e elas têm de poder ser feitas com calma.
+@export var teto_de_subida: float = 113.0
+## Altura do piso onde ele anda. Ele não tem gravidade nem colide com o mundo.
+@export var chao_y: float = 177.0
+@export var velocidade_vertical: float = 130.0
 
 @export_group("Faro")
 ## Segundos sem o jogador avançar que ligam o modo FARO.
@@ -147,11 +160,27 @@ func _physics_process(delta: float) -> void:
 		Estado.RECUO:
 			_recuo(delta)
 
+	_subir(delta)
+
 	# Vira pelo deslocamento REAL do quadro, e não pelo estado: assim o recuo (única
 	# vez em que ele anda para trás) fica certo de graça, e qualquer estado novo que
 	# alguém acrescente depois já nasce virando para o lado certo.
 	_virar_para(global_position.x - x_antes)
 	_atualizar_perigo()
+
+
+## Acompanha a altura do jogador até o teto de subida. Subir num degrau baixo deixou de
+## ser fuga; o mezanino continua sendo.
+##
+## ALTURA_DOS_PES: a origem do jogador fica 16px acima da superfície em que ele pisa, e a
+## do urso 1px abaixo dela — comparar as origens cruas o deixaria flutuando.
+func _subir(delta: float) -> void:
+	if estado == Estado.DORMINDO:
+		return
+	var alvo := clampf(
+		_jogador.global_position.y + ALTURA_DOS_PES, teto_de_subida, chao_y
+	)
+	global_position.y = move_toward(global_position.y, alvo, velocidade_vertical * delta)
 
 
 func _virar_para(deslocamento: float) -> void:
@@ -177,7 +206,7 @@ func _medir_hesitacao(delta: float) -> void:
 ## Velocidade de cruzeiro com elástico: quanto mais longe o jogador estiver, mais
 ## rápido ele vem. Sem isso, um bom jogador abria distância uma vez e jogava o resto
 ## da fase sem nenhuma pressão — o urso vira cenário. Com isso ele sempre volta a ser
-## relevante, mas nunca alcança quem está de fato correndo (o teto é 96px/s contra os
+## relevante, mas nunca alcança quem está de fato correndo (o teto é 120px/s contra os
 ## 180px/s do jogador).
 func _velocidade_de_caca() -> float:
 	# Distância em módulo: o elástico vale para os dois lados, senão ele demoraria

@@ -45,6 +45,18 @@ const QUEDA_FORTE := 260.0
 ## jogador perde a noção de onde vai pousar.
 @export var velocidade_queda_max := 460.0
 
+@export_group("Habilidades do último dia")
+## Um pulo extra no ar. DESLIGADO por padrão: a geometria dos corredores dos Dias 1 e 2
+## foi validada contra um pulo só, e com dois dá para subir onde o desenho não previu.
+@export var pulo_duplo := false
+## Fração do impulso normal usada no segundo pulo.
+@export var forca_do_pulo_duplo := 0.82
+## Arranque horizontal curto. Desligado por padrão, pelo mesmo motivo do pulo duplo.
+@export var arranque := false
+@export var velocidade_do_arranque := 400.0
+@export var duracao_do_arranque := 0.16
+@export var recarga_do_arranque := 0.7
+
 var state: PlayerState = PlayerState.IDLE
 var direction := 0.0
 
@@ -65,6 +77,12 @@ var _velocidade_queda := 0.0
 var _offset_base := Vector2.ZERO
 var _escala_alvo := Vector2.ONE
 var _proximo_passo := 0.0
+var _pulo_extra := false
+var _arranque_restante := 0.0
+var _recarga_arranque := 0.0
+## Lado do arranque, travado no disparo: corrigir o rumo no meio dele o tornaria um
+## empurrão dirigível em vez de um movimento com compromisso.
+var _lado_do_arranque := 1.0
 
 
 func _ready() -> void:
@@ -91,6 +109,10 @@ func _physics_process(delta: float) -> void:
 	# personagem acabou de ganhar chão (ou coyote), ele sai agora.
 	if _buffer_restante > 0.0 and _pode_pular():
 		_go_to_jump()
+	elif _buffer_restante > 0.0 and _pode_pular_de_novo():
+		_pular_no_ar()
+
+	_aplicar_arranque(delta)
 
 	move_and_slide()
 	_checar_pouso()
@@ -122,6 +144,9 @@ func _ler_entrada() -> void:
 
 	# Metade "entrada" do jump buffer: guarda a intenção mesmo quando ainda não é
 	# possível pular. A metade "saída" está no fim de _physics_process.
+	if Input.is_action_just_pressed("arrancar"):
+		_disparar_arranque()
+
 	if Input.is_action_just_pressed("jump"):
 		_buffer_restante = buffer_pulo
 	elif Input.is_action_just_released("jump") and velocity.y < 0.0:
@@ -133,6 +158,7 @@ func _ler_entrada() -> void:
 func _atualizar_temporizadores(delta: float) -> void:
 	if is_on_floor():
 		_coyote_restante = coyote
+		_pulo_extra = true
 	else:
 		_coyote_restante = maxf(_coyote_restante - delta, 0.0)
 	_buffer_restante = maxf(_buffer_restante - delta, 0.0)
@@ -151,6 +177,45 @@ func _aplicar_gravidade(delta: float) -> void:
 
 func _pode_pular() -> bool:
 	return controlavel and (is_on_floor() or _coyote_restante > 0.0)
+
+
+func _pode_pular_de_novo() -> bool:
+	return controlavel and pulo_duplo and _pulo_extra
+
+
+## Segundo pulo, mais curto que o primeiro. Não troca de estado: a seção 3.1 do TCC trava
+## a máquina em quatro estados, e este é o JUMP saindo de novo.
+func _pular_no_ar() -> void:
+	_pulo_extra = false
+	_buffer_restante = 0.0
+	velocity.y = JUMP_VELOCITY * forca_do_pulo_duplo
+	state = PlayerState.JUMP
+	_play("jump")
+	_escala_alvo = Vector2(0.86, 1.18)
+	Audio.tocar("pulo", -4.0, 0.08)
+	pulou.emit()
+
+
+## Arranque: velocidade fixa por um instante, na direção travada no disparo.
+func _aplicar_arranque(delta: float) -> void:
+	_recarga_arranque = maxf(_recarga_arranque - delta, 0.0)
+	if _arranque_restante <= 0.0:
+		return
+	_arranque_restante -= delta
+	velocity.x = _lado_do_arranque * velocidade_do_arranque
+	# Sem gravidade durante o arranque: é o que o torna útil para atravessar um vão, e
+	# o que o distingue de "correr um pouco mais rápido".
+	velocity.y = 0.0
+
+
+func _disparar_arranque() -> void:
+	if not arranque or _recarga_arranque > 0.0 or not controlavel:
+		return
+	_arranque_restante = duracao_do_arranque
+	_recarga_arranque = recarga_do_arranque
+	_lado_do_arranque = direction if direction != 0.0 else (-1.0 if anim.flip_h else 1.0)
+	_escala_alvo = Vector2(1.25, 0.8)
+	Audio.tocar("pulo", -8.0, 0.14)
 
 
 ## Velocidade horizontal de fato, depois das mecânicas de fase.

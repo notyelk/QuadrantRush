@@ -50,6 +50,8 @@ func _ready() -> void:
 	await _cenario_pasta()
 	await _cenario_foco()
 	await _cenario_setores()
+	await _cenario_bordas()
+	_cenario_enunciados()
 
 	print("\n=====  %s  =====" % ("FALHOU (%d)" % falhas if falhas else "TODOS OS TESTES OK"))
 	get_tree().quit(1 if falhas else 0)
@@ -779,6 +781,77 @@ func _cenario_setores() -> void:
 		get_tree().paused = false
 		fase.queue_free()
 		await get_tree().process_frame
+
+
+## As duas pontas do corredor são fechadas, e as habilidades do último dia continuam
+## desligadas aqui: a geometria dos Dias 1 e 2 foi validada contra um pulo só.
+func _cenario_bordas() -> void:
+	print("\n--- cenário 14: o corredor tem fim dos dois lados ---")
+
+	for cena in [CENA_FASE, preload("res://scenes/level/fase_02.tscn")]:
+		var fase: Node2D = cena.instantiate()
+		add_child(fase)
+		await get_tree().process_frame
+		await get_tree().process_frame
+
+		var dia: int = fase.numero_do_dia()
+		var colisores: Node2D = fase.get_node("Colisores")
+		_conferir("dia %d fecha a ponta esquerda" % dia,
+			colisores.has_node("BordaEsquerda"), true)
+		_conferir("dia %d fecha a ponta direita" % dia,
+			colisores.has_node("BordaDireita"), true)
+
+		var jogador: CharacterBody2D = fase.get_node("Player")
+		_conferir("dia %d não oferece pulo duplo" % dia, jogador.pulo_duplo, false)
+		_conferir("dia %d não oferece arranque" % dia, jogador.arranque, false)
+
+		# Correndo contra a parede da esquerda por meio segundo, ele não sai do corredor.
+		jogador.global_position = Vector2(24, 160)
+		for _i in 30:
+			Input.action_press("left")
+			await get_tree().physics_frame
+		Input.action_release("left")
+		_conferir("dia %d segura o jogador dentro do mapa" % dia,
+			jogador.global_position.x > -16.0, true)
+
+		get_tree().paused = false
+		fase.queue_free()
+		await get_tree().process_frame
+
+
+## O sorteio de enunciados não pode repetir texto dentro do estoque nem entregar uma Q2
+## sem a crise em que ela se transforma — sem o par, a maturação do Dia 2 fica muda.
+func _cenario_enunciados() -> void:
+	print("\n--- cenário 15: os enunciados são sorteados ---")
+
+	const Enunciados := preload("res://scripts/enunciados.gd")
+	var C := GameManager.Categoria
+
+	Enunciados.embaralhar()
+	var vistos := {}
+	var estoque: int = (Enunciados.POR_CATEGORIA[C.URGENTE_IMPORTANTE] as Array).size()
+	for _i in estoque:
+		vistos[Enunciados.sacar(C.URGENTE_IMPORTANTE)[0]] = true
+	_conferir("o saco de urgentes não repete", vistos.size(), estoque)
+
+	Enunciados.embaralhar()
+	var sem_crise := 0
+	for _i in (Enunciados.POR_CATEGORIA[C.IMPORTANTE_NAO_URGENTE] as Array).size():
+		if Enunciados.sacar(C.IMPORTANTE_NAO_URGENTE)[1].is_empty():
+			sem_crise += 1
+	_conferir("toda importante traz a crise dela", sem_crise, 0)
+
+	# Duas partidas seguidas não podem apresentar a mesma ordem, senão decorar volta a
+	# substituir ler.
+	var primeira: Array[String] = []
+	var segunda: Array[String] = []
+	Enunciados.embaralhar()
+	for _i in 8:
+		primeira.append(Enunciados.sacar(C.NAO_URGENTE_NAO_IMPORTANTE)[0])
+	Enunciados.embaralhar()
+	for _i in 8:
+		segunda.append(Enunciados.sacar(C.NAO_URGENTE_NAO_IMPORTANTE)[0])
+	_conferir("duas partidas não trazem a mesma ordem", primeira == segunda, false)
 
 
 func _abrir_fase(com_prazo: bool = false) -> Node2D:

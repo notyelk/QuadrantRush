@@ -108,6 +108,32 @@ func _cenario_sorteio() -> void:
 			q2_no_alto += 1
 	_conferir("Q2 sempre no mezanino", q2_no_alto, 50)
 
+	# Duas regras de pouso, conferidas nas 200 sementes. As duas são de GEOMETRIA e não de
+	# comportamento: um papel dentro da pedra ou dois degraus fundidos num só não quebram
+	# nada que rode, só tornam a partida impossível de terminar.
+	var dentro_do_pedestal := 0
+	var degraus_colados := 0
+	for semente in range(1, 201):
+		var layout := Sorteio.sortear(semente)
+		for ponto in layout["pousos"] as Array[Vector2]:
+			if ponto.y != Sorteio.Y_CHAO:
+				continue
+			if (
+				Sorteio.PEDESTAL_ESQ.has_point(Vector2(ponto.x, Sorteio.Y_PEDESTAL + 1.0))
+				or Sorteio.PEDESTAL_DIR.has_point(Vector2(ponto.x, Sorteio.Y_PEDESTAL + 1.0))
+			):
+				dentro_do_pedestal += 1
+		var degraus: Array[Rect2] = layout["degraus"]
+		for i in degraus.size():
+			for j in range(i + 1, degraus.size()):
+				if degraus[i].intersects(degraus[j]):
+					degraus_colados += 1
+
+	_conferir("nenhum papel pousa dentro de um pedestal", dentro_do_pedestal, 0)
+	_conferir("nenhum par de degraus se sobrepõe", degraus_colados, 0)
+	_conferir("e ainda sobram quatro degraus por arena",
+		(Sorteio.sortear(7)["degraus"] as Array[Rect2]).size(), 4)
+
 
 ## A trava do Quadro 1. Se alguém inventar pontuação nova nesta fase, este cenário quebra.
 ## Os números vêm do texto protocolado do TCC, não do código — foram digitados aqui à mão

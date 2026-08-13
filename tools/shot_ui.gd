@@ -27,6 +27,9 @@ func _ready() -> void:
 	await _briefing()
 	await _pausa()
 	await _resultado()
+	await _derrota()
+	await _licao()
+	await _encerramento()
 	await _ranking()
 
 	print("PASTA: ", ProjectSettings.globalize_path(DESTINO))
@@ -52,9 +55,10 @@ func _briefing() -> void:
 	var tela: Node = load("res://scenes/ui/briefing.tscn").instantiate()
 	get_tree().root.add_child(tela)
 	tela.montar(
-		GameManager.NOME_DO_DIA[1],
-		GameManager.TAREFAS_DO_DIA[1],
-		int(GameManager.SEGUNDOS_DO_DIA[1]),
+		3,
+		GameManager.NOME_DO_DIA[3],
+		GameManager.TAREFAS_DO_DIA[3],
+		int(GameManager.SEGUNDOS_DO_DIA[3]),
 	)
 	await _esperar()
 	await _salvar("briefing.png")
@@ -111,6 +115,89 @@ func _resultado() -> void:
 	await _salvar("resultado.png")
 	tela.queue_free()
 	await get_tree().process_frame
+
+
+## A derrota do último dia, que é a que mais linhas tem: relatório por quadrante mais as
+## duas linhas extras da fase, tudo no mesmo painel.
+func _derrota() -> void:
+	_semear_partida(3)
+	GameManager.finalizar_fase(false)
+
+	var tela: Node = load("res://scenes/ui/tela_resultado.tscn").instantiate()
+	add_child(tela)
+	tela.montar(false, _composicao(), [
+		["Pilha de pendências", "24 de 24"],
+		["Fase do Chefe alcançada", "3 de 4"],
+	], ["SOTERRADO PELAS PENDÊNCIAS",
+		"a pilha tomou a sala antes de Kleytonn vencer o relógio. O dia foi perdido."])
+	await get_tree().create_timer(1.5).timeout
+	await _salvar("derrota.png")
+	tela.queue_free()
+	await get_tree().process_frame
+
+
+## A explicação do erro, nas duas telas dela: o resumo e o detalhe de um quadrante.
+func _licao() -> void:
+	_semear_partida(3)
+	GameManager.finalizar_fase(false)
+
+	var tela: Node = load("res://scenes/ui/tela_licao.tscn").instantiate()
+	add_child(tela)
+	await _esperar()
+	await _salvar("licao_resumo.png")
+	tela._ao_detalhar()
+	await _esperar()
+	await _salvar("licao_detalhe.png")
+	tela.queue_free()
+	await get_tree().process_frame
+
+
+## O encerramento, nas três páginas.
+func _encerramento() -> void:
+	_semear_partida(3)
+	GameManager.finalizar_fase(true)
+
+	var tela: Node = load("res://scenes/ui/tela_final.tscn").instantiate()
+	add_child(tela)
+	for i in 3:
+		await _esperar()
+		await _salvar("final_%d.png" % (i + 1))
+		tela._ao_continuar()
+	tela.queue_free()
+	await get_tree().process_frame
+
+
+## Partida plausível de um dia, para as telas de relatório terem número dentro.
+func _semear_partida(dia: int) -> void:
+	Perfil.nickname = "Kleytonn"
+	var cat := GameManager.Categoria
+	var acao := GameManager.Acao
+
+	GameManager.iniciar_fase(GameManager.SEGUNDOS_DO_DIA[dia], dia)
+	for i in 5:
+		GameManager.registrar_acao(cat.URGENTE_IMPORTANTE, acao.COLETAR, "Auditoria pede o relatório")
+	for i in 3:
+		GameManager.registrar_acao(cat.URGENTE_IMPORTANTE, acao.IGNOROU, "Servidor de produção fora do ar")
+	for i in 2:
+		GameManager.registrar_acao(cat.IMPORTANTE_NAO_URGENTE, acao.COLETAR, "Documentar o processo")
+	for i in 4:
+		GameManager.registrar_acao(cat.IMPORTANTE_NAO_URGENTE, acao.IGNOROU, "Testar o backup antes que ele falhe sozinho")
+	GameManager.registrar_acao(cat.URGENTE_NAO_IMPORTANTE, acao.DELEGAR, "Reunião de status sem pauta")
+	for i in 2:
+		GameManager.registrar_acao(cat.URGENTE_NAO_IMPORTANTE, acao.RESOLVER, "Preencher a planilha de outro time")
+	for i in 6:
+		GameManager.registrar_acao(cat.NAO_URGENTE_NAO_IMPORTANTE, acao.EVITOU, "Notificação de rede social")
+	for i in 2:
+		GameManager.registrar_acao(cat.NAO_URGENTE_NAO_IMPORTANTE, acao.COLIDIU, "Vídeo engraçado no grupo")
+	GameManager.tempo_restante = 0.0
+
+
+func _composicao() -> Dictionary:
+	var cat := GameManager.Categoria
+	return {
+		cat.URGENTE_IMPORTANTE: 12, cat.IMPORTANTE_NAO_URGENTE: 9,
+		cat.URGENTE_NAO_IMPORTANTE: 9, cat.NAO_URGENTE_NAO_IMPORTANTE: 14,
+	}
 
 
 ## O ranking com gente dentro. Semeado à mão porque a tela vazia não mostra nada do que

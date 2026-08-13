@@ -26,17 +26,11 @@ const Zona := preload("res://scripts/zona_matriz.gd")
 
 const CENA_DEMANDA := preload("res://entities/demanda.tscn")
 const CENA_ZONA := preload("res://entities/zona_matriz.tscn")
-const CENA_ONDA := preload("res://entities/onda_papel.tscn")
 const CENA_LIGACAO := preload("res://entities/ligacao.tscn")
 
 ## Semente do sorteio. −1 sorteia (é o caso do jogo); um valor fixo reproduz a arena
 ## inteira, e é assim que o teste consegue ser determinístico.
 @export var semente := -1
-
-## Custo, em segundos, de encostar no piche. Passa por descontar_tempo(), por fora de
-## registrar_acao(), pelo mesmo motivo do ladrão de tempo: interrupção e hazard não são
-## tarefas da matriz e não podem sujar as notas por categoria.
-@export var custo_do_piche := 4.0
 
 ## Quanto a origem do jogador fica acima da superfície em que ele está pisando.
 ## Medido, não estimado: em fase_01.tscn o Player nasce em y=160 sobre um chão cuja
@@ -57,7 +51,6 @@ var _pousos: Array[Vector2] = []
 var _proximo := 0
 ## Quantas Q4 da reserva de e-mail já foram despejadas.
 var _reserva_gasta := 0
-var _ate_o_piche := 0.0
 
 
 # O que esta fase responde por si
@@ -71,8 +64,8 @@ func numero_do_dia() -> int:
 
 
 ## O modo foco acompanha o jogador desde o Dia 1 — habilidade aprendida não se perde de um
-## dia para o outro. Ele dobra o raio de leitura, mas NÃO impede a ligação nem o piche:
-## foco não resolve prazo.
+## dia para o outro. Ele amplia o raio de leitura, mas NÃO impede a ligação: foco não
+## resolve prazo.
 func usa_foco() -> bool:
 	return true
 
@@ -142,6 +135,11 @@ func extras_do_resultado() -> Array:
 # Montagem
 
 func _preparar() -> void:
+	# A arena não tem travessia obrigatória validada como os corredores dos Dias 1 e 2, e
+	# aqui o trabalho é atravessar a sala contra o relógio de validade do papel.
+	jogador.pulo_duplo = true
+	jogador.arranque = true
+
 	layout = Sorteio.sortear(semente)
 
 	# Se um layout inválido chegasse até aqui, a partida seria invencível sem nada
@@ -212,10 +210,9 @@ func _montar_zonas() -> void:
 
 # O laço da fase
 
-func _atualizar(delta: float) -> void:
+func _atualizar(_delta: float) -> void:
 	_ler_entrada()
 	_checar_zonas()
-	_checar_piche(delta)
 
 
 ## Entrada por SONDAGEM, e não por _unhandled_input: Input.action_press() não sintetiza
@@ -352,7 +349,6 @@ func _ao_apodrecer(demanda: Node) -> void:
 
 
 const AVISO_DO_ATAQUE := {
-	"onda": ["PILHA DE PAPEL CHEGANDO", "Suba nas plataformas."],
 	"ligacao": ["O TELEFONE ESTÁ TOCANDO", "Corra: alcançar prende você."],
 	"ocupar": ["O CHEFE VAI OCUPAR UM CANTO", "Aquele destino sai do ar."],
 	"enxurrada": ["E-MAIL EM CÓPIA PARA TODOS", "Vem lixo. Nada ali é seu problema."],
@@ -369,22 +365,10 @@ func _ao_telegrafar(tipo: String, aviso: float) -> void:
 
 func _ao_atacar(tipo: String) -> void:
 	match tipo:
-		"onda": _atacar_onda()
 		"ligacao": _atacar_ligacao()
 		"ocupar": _atacar_ocupar()
 		"enxurrada": _atacar_enxurrada()
 		"reorganizar": _atacar_reorganizar()
-
-
-func _atacar_onda() -> void:
-	var onda := CENA_ONDA.instantiate()
-	# Sempre do lado oposto ao jogador: uma onda que nascesse em cima dele seria
-	# inesquivável, e inesquivável é injusto, não difícil.
-	var da_esquerda := jogador.global_position.x > Sorteio.LARGURA * 0.5
-	onda.rumo = 1.0 if da_esquerda else -1.0
-	onda.position = Vector2(-30.0 if da_esquerda else 670.0, Sorteio.Y_CHAO)
-	inimigos.add_child(onda)
-	Audio.tocar("dano", -12.0, 0.1)
 
 
 func _atacar_ligacao() -> void:
@@ -531,28 +515,6 @@ func _atualizar_piche() -> void:
 	piche.position.y = Sorteio.Y_CHAO - altura
 	piche.visible = altura > 0.5
 	piche.scale.y = maxf(altura / 8.0, 0.01)
-
-
-## Encostar no piche custa tempo e empurra para cima. Não devolve ao checkpoint como a
-## queda no vão: numa arena de uma tela só, teleportar o jogador seria mais desorientador
-## do que a própria punição.
-func _checar_piche(delta: float) -> void:
-	_ate_o_piche = maxf(_ate_o_piche - delta, 0.0)
-	if pilha.unidades <= 0 or _ate_o_piche > 0.0:
-		return
-	if jogador.global_position.y < pilha.topo(Sorteio.Y_CHAO):
-		return
-
-	_ate_o_piche = 1.2                      # carência, para não cobrar todo quadro
-	GameManager.descontar_tempo(custo_do_piche)
-	jogador.velocity.y = -260.0
-	Audio.tocar("dano", -4.0)
-	Juice.impacto(0.7)
-	Juice.flash(Color("6b4a2a"), 0.2)
-	get_tree().call_group(
-		"hud", "mostrar_dica", "PISOU NA PILHA",
-		"Custou %d segundos. Suba." % int(custo_do_piche), Color("6b4a2a"), 2
-	)
 
 
 # Enunciados

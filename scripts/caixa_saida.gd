@@ -19,6 +19,8 @@ const COR := Color("b9c0e0")
 
 @onready var brilho: Sprite2D = $Brilho
 
+var _pulso: Tween = null
+
 
 func _ready() -> void:
 	body_entered.connect(_ao_encostar)
@@ -30,6 +32,15 @@ func _ready() -> void:
 
 func _ao_mudar_carga(carga: int) -> void:
 	brilho.visible = carga > 0
+	if is_instance_valid(_pulso):
+		_pulso.kill()
+	if not brilho.visible:
+		return
+	# Pulsa enquanto houver o que entregar. Um brilho parado some no meio da parede; o
+	# que precisa saltar aos olhos é que existe uma válvula ali adiante.
+	_pulso = create_tween().set_loops()
+	_pulso.tween_property(brilho, "modulate:a", 1.0, 0.45).set_trans(Tween.TRANS_SINE)
+	_pulso.tween_property(brilho, "modulate:a", 0.35, 0.45).set_trans(Tween.TRANS_SINE)
 
 
 func _ao_encostar(corpo: Node2D) -> void:
@@ -42,7 +53,9 @@ func _ao_encostar(corpo: Node2D) -> void:
 	Audio.tocar("comporta")
 	Feedback.pontos(get_parent(), global_position + Vector2(0, -10),
 		"entregue %d" % entregues, COR)
-	Feedback.onda(get_parent(), global_position, COR, 26.0)
+	Feedback.onda(get_parent(), global_position, COR, 40.0)
+	Feedback.estouro(get_parent(), global_position, COR, 14, 70.0)
+	Juice.flash(COR, 0.14)
 	get_tree().call_group(
 		"hud", "mostrar_dica", "PASTA VAZIA",
 		"%d tarefa(s) entregues — você voltou a andar no ritmo" % entregues, COR, 2)

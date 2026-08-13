@@ -36,6 +36,7 @@ const PAUTA := {
 			["ENCOSTAR NUM PAPEL  =  pego (um por vez)", "8fd6a8"],
 			["POUSAR NUM CANTO  =  classifico naquele quadrante", "5aa9e6"],
 			["S ou SETA PARA BAIXO  =  largo o papel", "f2c14e"],
+			["ESPAÇO  =  arranco   ·   W NO AR  =  pulo de novo", "e0a458"],
 			["SEGURAR SHIFT  =  me concentro (leio de longe, mas ando devagar)", "74a4f1"],
 		],
 		"alerta": "Sobreviva ao expediente. Quem derruba você é a pilha de pendências.",

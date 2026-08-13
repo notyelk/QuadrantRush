@@ -2,22 +2,17 @@
 
 Rodar:  python tools/gerar_fase_03.py
 
-── O que este script escreve, e o que ele NAO escreve ────────────────────────────────
 Escreve a CASCA ESTATICA da arena: piso, paredes, plataformas do mezanino, pedestais dos
 cantos de baixo, o poco de queda, o parallax pela janela e os nos comuns que fase_base.gd
 exige (Player, HUD, Saida, Tarefas, Bifurcacoes, Checkpoints, ZonaDeQueda, Inimigos).
 
-NAO escreve o que e sorteado a cada partida — degraus e cantos da matriz nascem em codigo,
-em scripts/fase_03.gd, a partir de scripts/sorteio_arena.gd. Essa divisao e o coracao do
-sorteio de layout: a silhueta da sala fica estavel para o jogador se orientar, e o que
-muda e a rota e o significado de cada canto.
+Degraus e cantos da matriz nao vem daqui: sao sorteados a cada partida por
+scripts/sorteio_arena.gd e nascem em codigo. A silhueta fica estavel para o jogador se
+orientar, e o que muda e a rota e o significado de cada canto.
 
-── Por que a validacao NAO esta aqui ─────────────────────────────────────────────────
-Nas Fases 1 e 2 o validador de geometria roda neste ponto, antes de gravar o .tscn. Aqui
-ele nao serviria de nada: a geometria que importa so existe em tempo de execucao. Ele
-mudou de lugar e vive em sorteio_arena.gd, que sorteia, confere e RE-SORTEIA se reprovar.
-O que este script garante e so que a casca bate com as constantes que o sorteador usa —
-ver checar_coerencia() no fim do arquivo.
+Por isso a validacao de geometria tambem nao esta aqui, e sim no sorteador, que confere e
+RE-SORTEIA se reprovar. Este script so garante que a casca bate com as constantes que o
+sorteador usa — ver checar_coerencia() no fim do arquivo.
 """
 
 from pathlib import Path

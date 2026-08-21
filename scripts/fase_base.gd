@@ -50,6 +50,8 @@ const SOM_DA_ACAO := {
 var composicao: Dictionary = {}
 
 var _q1_coletadas := 0
+## Por que o dia foi perdido, quando não foi por tempo. Lido por fecho().
+var _motivo_derrota := ""
 var _ultimo_checkpoint := Vector2.ZERO
 var _terminou := false
 var _perigo: Node2D = null
@@ -101,6 +103,19 @@ func vitoria_por_tempo() -> bool:
 	return false
 
 
+## Esta fase termina num elevador? Verdadeiro por padrão: os dois corredores acabam numa
+## porta que só abre com as urgentes resolvidas. Falso desativa a saída por inteiro — numa
+## arena de tela única ela seria um atalho para encerrar o expediente sem enfrentá-lo.
+func usa_saida() -> bool:
+	return true
+
+
+## Esta fase tem percurso a mostrar no HUD? Verdadeiro por padrão: os corredores são
+## longos e a barra é a única forma de saber quanto falta e onde está o perseguidor.
+func usa_percurso() -> bool:
+	return true
+
+
 ## Qual par de faixas toca nesta fase (ver Audio.iniciar_musica). Os dois expedientes
 ## usam "expediente"; o gancho continua aqui porque é onde uma fase futura o trocaria.
 func conjunto_musical() -> String:
@@ -129,6 +144,22 @@ func progresso(posicao: Vector2) -> float:
 ## obrigatória. Quem quiser mudar a meta em curso chama revisar_meta() depois.
 func meta_de_urgentes() -> int:
 	return int(composicao.get(GameManager.Categoria.URGENTE_IMPORTANTE, 0))
+
+
+## Quantas urgentes ainda podem ser coletadas: as que continuam no corredor sem terem
+## sido resolvidas. Uma tarefa deixada para trás desliga o próprio colisor, então ela
+## conta como perdida mesmo continuando na árvore.
+##
+## A Fase 2 soma a isto o que ainda vai chegar, porque lá as tarefas caem durante o
+## expediente.
+func urgentes_ao_alcance() -> int:
+	var restam := 0
+	for tarefa in tarefas.get_children():
+		if not "categoria" in tarefa or tarefa.esta_resolvida():
+			continue
+		if tarefa.categoria == GameManager.Categoria.URGENTE_IMPORTANTE:
+			restam += 1
+	return restam
 
 
 ## Reapresenta a cota ao HUD e reavalia a trava do elevador.
@@ -172,6 +203,8 @@ func fecho(vitoria: bool) -> Array:
 			"EXPEDIENTE CONCLUÍDO",
 			"%s saiu no horário, com %s de sobra." % [quem, _relogio(GameManager.tempo_restante)],
 		]
+	if not _motivo_derrota.is_empty():
+		return ["DIA PERDIDO", _motivo_derrota]
 	return [
 		"DIA PERDIDO",
 		"o expediente acabou antes de %s chegar ao elevador." % quem,
@@ -248,7 +281,11 @@ func _ready() -> void:
 	zona_de_queda.body_entered.connect(_ao_cair)
 	GameManager.tarefa_registrada.connect(_ao_registrar_tarefa)
 	GameManager.fase_terminada.connect(_ao_terminar_fase)
-	saida.alcancada.connect(_ao_alcancar_saida)
+	if usa_saida():
+		saida.alcancada.connect(_ao_alcancar_saida)
+		saida.barrada.connect(_ao_barrar_saida)
+	else:
+		saida.desativar()
 
 	_ligar_perigo()
 
@@ -262,6 +299,7 @@ func _ready() -> void:
 	hud.mostrar_pasta(usa_pasta())
 	hud.atualizar_urgentes(0, meta_de_urgentes())
 	saida.pendentes = meta_de_urgentes()
+	hud.mostrar_percurso(usa_percurso())
 	hud.definir_percurso(_progresso_inicial, _progresso_final)
 
 	var frase := abertura()
@@ -455,6 +493,30 @@ func devolver_ao_checkpoint(custo: float, titulo: String, texto: String, cor: Co
 
 func _ao_alcancar_saida() -> void:
 	Audio.tocar("porta")
+
+
+## O jogador chegou ao elevador e ele continua trancado.
+##
+## Se ainda houver urgente ao alcance, a saída avisa e o dia segue — voltar e resolver é
+## a resposta. Se não houver, o expediente acabou: uma urgente deixada para trás é
+## irrecuperável (a tarefa desliga o colisor ao se registrar), e insistir na porta
+## trancada até o relógio zerar não ensina nada que a derrota agora já não ensine.
+func _ao_barrar_saida() -> void:
+	var faltam := meta_de_urgentes() - _q1_coletadas
+	if urgentes_ao_alcance() >= faltam:
+		return
+
+	_motivo_derrota = (
+		"o elevador não abre: 1 urgente ficou para trás e não há como voltar a ela."
+		if faltam <= 1
+		else "o elevador não abre: %d urgentes ficaram para trás e não há como voltar a elas." % faltam
+	)
+	get_tree().call_group(
+		"hud", "mostrar_dica", "DIA PERDIDO",
+		"Você chegou ao elevador com urgente pendente. Não dá para fechar o dia assim.",
+		GameManager.COR_CATEGORIA[GameManager.Categoria.URGENTE_IMPORTANTE], 3
+	)
+	GameManager.finalizar_fase(false)
 
 
 func _ao_terminar_fase(vitoria: bool) -> void:

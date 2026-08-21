@@ -7,10 +7,9 @@ extends RefCounted
 ## não competem pela atenção do jogador, que foi o motivo de o urso sair do Dia 2. E ela é
 ## escrita por ele: sobe com o que classificou mal, desce com o que classificou bem.
 ##
-## Não pontua nem desconta tempo por si. Lê contadores que já existem (Acao.IGNOROU, que
-## vale 0) e os transforma em altura; encostar nela cobra segundos por descontar_tempo(),
-## o mesmo regime do ladrão de tempo e da queda no vão, por fora de registrar_acao() para
-## não sujar as notas por categoria.
+## Não pontua nem desconta tempo. Lê contadores que já existem (Acao.IGNOROU, que vale 0)
+## e os transforma em altura, por fora de registrar_acao(), para não sujar as notas por
+## categoria.
 ##
 ## RefCounted e não Node, para que a aritmética seja testável sem cena.
 
@@ -27,18 +26,16 @@ const PESO_APODRECIDA := {
 	GameManager.Categoria.NAO_URGENTE_NAO_IMPORTANTE: 0,
 }
 
-## Papel entregue no canto errado. Pesa como uma pendência média: o jogador agiu, só
-## classificou mal — é erro de julgamento, não de omissão.
-const PESO_ERRO := 1
-
-## Derrota. A altura em pixels é DERIVADA daqui (ver altura_px), e não o contrário.
+## Papel entregue no canto errado.
 ##
-## Foi tentado o contrário primeiro — "cada unidade vale 4px" — e o teste pegou o
-## resultado na primeira execução: 24 unidades dariam 96px de piche numa arena de 208px de
-## altura, afogando degraus e mezanino. A partir daí o jogador não teria como entregar
-## nada e só poderia perder, que é a espiral sem saída recusada sete vezes neste projeto.
-## Amarrar a altura ao teto da arena, e não a unidade a um número bonito, é o que impede
-## a regra de voltar a brigar com a geometria.
+## Pesa o dobro de uma pendência comum, e mais do que a demanda alivia ao ser acertada
+## (-1). A assimetria é o que sustenta a fase: sem ela, largar papel em canto sorteado
+## mantém a pilha parada e o expediente se ganha sem classificar nada.
+const PESO_ERRO := 2
+
+## Derrota. A altura em pixels é DERIVADA daqui (ver altura_px), e não o contrário: presa
+## ao teto da arena, a pilha nunca afoga degraus e mezanino a ponto de tornar a entrega
+## impossível.
 const SOTERRA := 24
 
 ## Limiar de ALERTA: daqui para cima o HUD fica vermelho e a música aperta. É aviso, não

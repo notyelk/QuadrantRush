@@ -30,6 +30,7 @@ const LARGURA_PERCURSO := 388.0
 @onready var vinheta: TextureRect = $Vinheta
 @onready var veu_foco: TextureRect = $Foco
 @onready var alerta: Label = $Alerta
+@onready var percurso: Control = $Topo/Percurso
 @onready var barra_andado: ColorRect = $Topo/Percurso/Andado
 @onready var marca_jogador: ColorRect = $Topo/Percurso/MarcaJogador
 @onready var marca_prazo: ColorRect = $Topo/Percurso/MarcaPrazo
@@ -160,7 +161,16 @@ func definir_percurso(inicio: float, fim: float) -> void:
 	_fim = maxf(fim, inicio + 1.0)
 
 
+## Liga ou desliga a barra de percurso. Uma arena de tela única não tem "quanto falta
+## andar": ali a barra ficaria colada num extremo o expediente inteiro, dizendo o que não
+## é verdade num espaço de HUD que já é disputado.
+func mostrar_percurso(ativo: bool) -> void:
+	percurso.visible = ativo
+
+
 func atualizar_percurso(progresso_jogador: float, progresso_perigo: float) -> void:
+	if not percurso.visible:
+		return
 	var pj := _fracao(progresso_jogador)
 	barra_andado.size.x = LARGURA_PERCURSO * pj
 	marca_jogador.position.x = LARGURA_PERCURSO * pj - 1.0

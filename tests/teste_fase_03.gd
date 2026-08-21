@@ -26,6 +26,7 @@ extends Node
 ##                    expediente inteiro, e era ela que secava aos 71 s de 100.
 
 const Sorteio := preload("res://scripts/sorteio_arena.gd")
+const Pilha := preload("res://scripts/pilha_pendencias.gd")
 
 var falhas := 0
 
@@ -161,6 +162,23 @@ func _cenario_quadro_1() -> void:
 		_conferir("%s: pontos" % linha[0], efeito["pontos"], linha[3])
 		_conferir("%s: tempo" % linha[0], efeito["delta_tempo"], linha[4])
 
+	# O Quadro 1 continua declarando o desconto de tempo, mas no dia em que esgotar o
+	# relógio é VENCER ele não pode ser aplicado: encurtar o expediente transformaria a
+	# punição num atalho, e errar de propósito viraria a estratégia mais rápida.
+	GameManager.iniciar_fase(100.0, 3)
+	GameManager.vitoria_ao_esgotar_tempo = true
+	var antes := GameManager.tempo_restante
+	GameManager.registrar_acao(C.NAO_URGENTE_NAO_IMPORTANTE, A.COLIDIU)
+	GameManager.descontar_tempo(6.0)
+	_conferir("errar não adianta o fim do expediente de sobrevivência",
+		is_equal_approx(GameManager.tempo_restante, antes), true)
+
+	# E continua descontando no dia em que o relógio é a ameaça.
+	GameManager.iniciar_fase(100.0, 1)
+	GameManager.registrar_acao(C.NAO_URGENTE_NAO_IMPORTANTE, A.COLIDIU)
+	_conferir("mas desconta normalmente quando o relógio é a ameaça",
+		is_equal_approx(GameManager.tempo_restante, 92.0), true)
+
 	GameManager.finalizar_fase(false)
 
 
@@ -220,7 +238,6 @@ func _cenario_mapeamento() -> void:
 func _cenario_pilha() -> void:
 	print("\n--- cenário 4: a aritmética do soterramento ---")
 
-	var Pilha := load("res://scripts/pilha_pendencias.gd")
 	var pilha = Pilha.new()
 
 	var C := GameManager.Categoria
@@ -236,24 +253,34 @@ func _cenario_pilha() -> void:
 	_conferir("Q4 ignorada não pesa nada", pilha.unidades, 3)
 
 	pilha.errou()
-	_conferir("canto errado pesa 1", pilha.unidades, 4)
+	_conferir("canto errado pesa 2", pilha.unidades, 5)
 
 	pilha.acertou()
-	_conferir("acerto derruba 1", pilha.unidades, 3)
+	_conferir("acerto derruba 1", pilha.unidades, 4)
+
+	# Errar tem de custar mais do que acertar devolve. Sem essa assimetria, largar papel em
+	# canto aleatório mantém a pilha parada e a fase se ganha sem classificar nada.
+	_conferir("errar pesa mais do que acertar alivia", Pilha.PESO_ERRO > 1, true)
 
 	for _i in 10:
 		pilha.acertou()
 	_conferir("não passa de zero", pilha.unidades, 0)
 
 	# Os dois limiares que definem a dramaturgia da fase.
-	for _i in Pilha.ALERTA:
+	for _i in int(ceil(float(Pilha.ALERTA) / Pilha.PESO_ERRO)):
 		pilha.errou()
 	_conferir("entra em alerta no limiar", pilha.em_alerta(), true)
-	_conferir("mas ainda não perdeu", pilha.soterrou(), false)
 
-	for _i in (Pilha.SOTERRA - Pilha.ALERTA):
+	for _i in Pilha.SOTERRA:
 		pilha.errou()
 	_conferir("soterrou no limiar", pilha.soterrou(), true)
+
+	# A fase tem de recusar o chute. Um jogador que recolhe papel e larga em canto sorteado
+	# acerta ~1 em 4; um que classifica bem acerta 4 em 5. O modelo abaixo roda o orçamento
+	# real do expediente contra a aritmética real da pilha, priorizando o que pesa mais ao
+	# apodrecer — que é o que um jogador competente faz.
+	_conferir("classificar no chute soterra", _soterrados(0.25, 24) >= 55, true)
+	_conferir("classificar bem sobrevive", _soterrados(0.8, 24), 0)
 
 	# A recuperação precisa ser possível DEPOIS do alerta, senão a fase vira espiral sem
 	# saída — recusada sete vezes neste projeto e recusada de novo aqui.
@@ -348,6 +375,25 @@ func _cenario_arena() -> void:
 		fase.tempo_de_expediente())
 	_conferir("o briefing anuncia o total real de demandas", GameManager.TAREFAS_DO_DIA[3],
 		Sorteio.total_de_demandas())
+
+	# As duas habilidades que só existem neste dia, e o anúncio delas. O jogador chega
+	# aqui de dois expedientes inteiros em que pular no ar não fazia nada, então ligá-las
+	# sem avisar é o mesmo que não ligá-las.
+	var jogador: CharacterBody2D = fase.get_node("Player")
+	_conferir("o último dia oferece pulo duplo", jogador.pulo_duplo, true)
+	_conferir("o último dia oferece arranque", jogador.arranque, true)
+	var Briefing := load("res://scripts/briefing.gd")
+	var anuncia := false
+	for regra in (Briefing.PAUTA[3]["regras"] as Array):
+		if str(regra[0]).contains("PULO DUPLO"):
+			anuncia = true
+	_conferir("a pauta do dia anuncia o pulo duplo", anuncia, true)
+
+	# A arena cabe numa tela só: barra de percurso ali fica colada num extremo o
+	# expediente inteiro, ocupando espaço de HUD que os dois corredores precisam.
+	_conferir("a arena não mostra barra de percurso", fase.usa_percurso(), false)
+	_conferir("e a barra está escondida no HUD",
+		fase.get_node("HUD").percurso.visible, false)
 
 	fase.queue_free()
 	await get_tree().process_frame
@@ -727,10 +773,11 @@ func _cenario_pressao() -> void:
 	fase.queue_free()
 	await get_tree().process_frame
 
-	# O papel que vence na mão
-	#
-	# Era a maior saída silenciosa da fase: pegar um papel congelava a validade dele, e dava
-	# para segurar uma urgente o expediente inteiro sem consequência nenhuma.
+	# O papel na mão
+
+	# O que já foi pego é trabalho em andamento: o relógio de validade para, e volta a
+	# correr se o jogador largar. Segurar continua tendo custo, porque só cabe um papel
+	# por vez e o que fica no chão apodrece.
 	fase = await _abrir_fase(52)
 	fase._soltar_papel(GameManager.Categoria.URGENTE_IMPORTANTE,
 		Vector2(fase.jogador.global_position.x, Sorteio.Y_CHAO))
@@ -753,18 +800,21 @@ func _cenario_pressao() -> void:
 		var restante_ao_pegar: float = papel._restante
 		for _i in 30:
 			await get_tree().physics_frame
-		_conferir("a validade corre com o papel na mão",
-			papel._restante < restante_ao_pegar - 0.3, true)
+		_conferir("a validade para com o papel na mão",
+			is_equal_approx(papel._restante, restante_ao_pegar), true)
+		_conferir("e o papel continua na mão", papel.resolvida, false)
 
-		# E quando ele vence na mão, as mãos precisam ficar livres de verdade: sem isso o
-		# jogador ficaria 20% mais lento até o fim do expediente sem nada para explicar.
-		papel._restante = 0.02
-		for _i in 12:
+		# Largar devolve o papel ao chão e o relógio volta a correr de onde parou.
+		fase._largar()
+		# Longe do papel largado: a fase pega por proximidade, e ficar em cima dele o
+		# recolheria no quadro seguinte.
+		fase.jogador.global_position.x += 150.0
+		# Ele cai até o chão antes de voltar a envelhecer; a espera cobre a queda e a
+		# contagem depois dela.
+		for _i in 60:
 			await get_tree().physics_frame
-		fase._ler_entrada()
-		_conferir("vencer na mão libera as mãos", GameManager.carregando, false)
-		_conferir("e conta como pendência, não como acerto",
-			GameManager.acoes_por_tipo[GameManager.Acao.IGNOROU] > 0, true)
+		_conferir("largado, volta a envelhecer",
+			papel._restante < restante_ao_pegar - 0.3, true)
 
 	fase.queue_free()
 	await get_tree().process_frame
@@ -807,3 +857,34 @@ func _conferir(o_que: String, obtido: Variant, esperado: Variant) -> void:
 		o_que, str(obtido),
 		"" if passou else "   (esperado %s)" % str(esperado),
 	])
+
+
+## Quantas de 60 partidas soterram, dada a taxa de acerto do jogador e quantos papéis ele
+## consegue rotear no expediente. O jogador do modelo prioriza pelo peso de apodrecimento.
+func _soterrados(acerto: float, entregas: int) -> int:
+	var perdeu := 0
+	for semente in 60:
+		var r := RandomNumberGenerator.new()
+		r.seed = semente
+		var fila: Array = []
+		for cat in Sorteio.ORCAMENTO:
+			for _i in int(Sorteio.ORCAMENTO[cat]):
+				fila.append(cat)
+		for _i in int(Sorteio.RESERVA_EMAIL):
+			fila.append(GameManager.Categoria.NAO_URGENTE_NAO_IMPORTANTE)
+		fila.shuffle()
+		fila.sort_custom(func(a, b) -> bool:
+			return int(Pilha.PESO_APODRECIDA.get(a, 1)) > int(Pilha.PESO_APODRECIDA.get(b, 1)))
+
+		var unidades := 0
+		var pico := 0
+		for i in fila.size():
+			if i < entregas:
+				unidades += -1 if r.randf() < acerto else Pilha.PESO_ERRO
+			else:
+				unidades += int(Pilha.PESO_APODRECIDA.get(fila[i], 1))
+			unidades = clampi(unidades, 0, Pilha.SOTERRA)
+			pico = maxi(pico, unidades)
+		if pico >= Pilha.SOTERRA:
+			perdeu += 1
+	return perdeu

@@ -26,12 +26,10 @@ extends Area2D
 ## chegada é o aviso, e um papel que aparecesse do nada seria injusto de ler.
 @export var pousa: float = 0.0
 
-## Segundos até apodrecer. É o relógio que transforma "não deu tempo" em consequência.
-##
-## O relógio corre TAMBÉM com o papel na mão (ver _physics_process). Congelar a validade
-## ao pegar abriria uma saída da fase inteira: segurar uma urgente o expediente todo sem
-## custo nenhum. Trabalho em andamento também vence, e é isso que torna "pegar" uma
-## decisão em vez de um reflexo.
+## Segundos até apodrecer, contados enquanto o papel está no chão. Na mão o relógio para:
+## o que o jogador já pegou é trabalho em andamento, e vê-lo dissolver na própria mão lê
+## como falha do jogo. Segurar continua tendo custo — só se carrega um papel por vez, e o
+## que fica no chão apodrece e sobe a pilha.
 @export var validade := 11.0
 
 const VELOCIDADE_QUEDA := 150.0
@@ -61,9 +59,6 @@ signal apodreceu(demanda: Node)
 
 var carregada := false
 var resolvida := false
-## Vencido enquanto estava sendo carregado. A fase lê para escolher a frase do aviso: um
-## papel que apodreceu no chão e um que apodreceu na mão ensinam coisas diferentes.
-var na_mao_ao_vencer := false
 
 var _jogador: Node2D = null
 var _caiu := false
@@ -96,10 +91,6 @@ func _physics_process(delta: float) -> void:
 
 	if carregada:
 		_seguir_o_jogador(delta)
-		# Envelhece na mão também. É o que impede "pegar e segurar" de ser uma pausa de
-		# graça no relógio da tarefa — e é o que faz o jogador escolher qual papel vale a
-		# viagem, em vez de recolher o primeiro que vê.
-		_envelhecer(delta)
 		return
 
 	if not _caiu:
@@ -144,12 +135,7 @@ func _envelhecer(delta: float) -> void:
 	# Q4 que expirou sozinha é ACERTO: a resposta certa para "nem urgente nem importante"
 	# é não fazer nada. Registrar isso como EVITOU, e não como omissão, é o que impede o
 	# relatório final de contar um acerto como falha.
-	#
-	# Exceção: uma Q4 que apodreceu NA MÃO não é ter desviado da distração — é ter
-	# carregado a distração o caminho todo, que é justamente o erro que a matriz existe
-	# para evitar. Sem isto, pegar lixo e passear com ele seria premiado igual a ignorá-lo.
-	var certo := categoria == GameManager.Categoria.NAO_URGENTE_NAO_IMPORTANTE and not carregada
-	na_mao_ao_vencer = carregada
+	var certo := categoria == GameManager.Categoria.NAO_URGENTE_NAO_IMPORTANTE
 	resolver(GameManager.Acao.EVITOU if certo else GameManager.Acao.IGNOROU)
 	if not certo:
 		apodreceu.emit(self)
@@ -182,12 +168,15 @@ func pegar() -> void:
 	carregada = true
 	colisor.set_deferred("disabled", true)
 	z_index = 6
+	# Sai do piscar de "prestes a vencer": na mão ele não vence mais, e continuar vermelho
+	# diria o contrário.
+	icone.modulate = Color.WHITE
 	Audio.tocar("coleta", -8.0, 0.06)
 
 
-## Devolve o papel ao chão sem registrar nada. O cronômetro de validade continua de onde
-## parou: pegar por engano não pode ser sentença, senão o jogador para de experimentar e
-## a fase deixa de ensinar.
+## Devolve o papel ao chão sem registrar nada. O cronômetro de validade volta a correr de
+## onde parou: pegar por engano não pode ser sentença, senão o jogador para de experimentar
+## e a fase deixa de ensinar.
 func largar() -> void:
 	if resolvida or not carregada:
 		return

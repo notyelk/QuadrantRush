@@ -20,6 +20,7 @@ const PAUTA := {
 			["SUBIR NA BANDEJA DO COLEGA  =  delego", "5aa9e6"],
 			["SEGURAR SHIFT  =  me concentro (leio de longe, mas ando devagar)", "74a4f1"],
 		],
+		"objetivo": "Chegue ao elevador antes de o expediente acabar.",
 		"alerta": "O elevador só abre com todas as urgentes resolvidas.",
 	},
 	2: {
@@ -29,6 +30,7 @@ const PAUTA := {
 			["SUBIR NA BANDEJA DO COLEGA  =  delego", "5aa9e6"],
 			["SEGURAR SHIFT  =  me concentro (leio de longe, mas ando devagar)", "74a4f1"],
 		],
+		"objetivo": "Chegue ao elevador antes de o expediente acabar.",
 		"alerta": "As tarefas chegam sozinhas, e o que você adiar volta como urgência.",
 	},
 	3: {
@@ -36,10 +38,12 @@ const PAUTA := {
 			["ENCOSTAR NUM PAPEL  =  pego (um por vez)", "8fd6a8"],
 			["POUSAR NUM CANTO  =  classifico naquele quadrante", "5aa9e6"],
 			["S ou SETA PARA BAIXO  =  largo o papel", "f2c14e"],
-			["ESPAÇO  =  arranco   ·   W NO AR  =  pulo de novo", "e0a458"],
+			["W (ou SETA PARA CIMA) DE NOVO NO AR  =  PULO DUPLO, só hoje", "e0a458"],
+			["ESPAÇO  =  arranco para a frente, só hoje", "e0a458"],
 			["SEGURAR SHIFT  =  me concentro (leio de longe, mas ando devagar)", "74a4f1"],
 		],
-		"alerta": "Sobreviva ao expediente. Quem derruba você é a pilha de pendências.",
+		"objetivo": "Você VENCE quando o relógio zerar. Aguente os %d segundos de reunião.",
+		"alerta": "Só perde quem for soterrado: cada papel mal classificado sobe a pilha.",
 	},
 }
 
@@ -63,11 +67,16 @@ func _ready() -> void:
 
 func montar(dia: int, nome_do_dia: String, total_de_tarefas: int, segundos: int) -> void:
 	titulo.text = nome_do_dia.to_upper()
-	resumo.text = "%d tarefas na sua mesa. %d segundos de expediente.\nNão vai dar para todas." % [
-		total_de_tarefas, segundos,
-	]
 
 	var pauta: Dictionary = PAUTA.get(dia, PAUTA[1])
+	# O objetivo vem antes da contagem: o Dia 3 inverte o sinal do relógio, e ler "100
+	# segundos de expediente" sem saber disso ensina a correr contra o tempo errado.
+	var objetivo := str(pauta["objetivo"])
+	if objetivo.contains("%d"):
+		objetivo = objetivo % segundos
+	resumo.text = "%s\n%d tarefas na sua mesa. Não vai dar para todas." % [
+		objetivo, total_de_tarefas,
+	]
 	instrucao.text = (
 		"Cada papel é uma tarefa. Chegue perto para ler o que é, e responda com o corpo:"
 	)

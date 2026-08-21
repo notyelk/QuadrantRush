@@ -71,9 +71,23 @@ const FAIXA_MEZ_DIR := Vector2(448, 528)
 
 ## Candidatos a degrau (x inicial). Cada degrau tem 48px de largura e fica em Y_DEGRAU.
 ## As duas listas servem os dois lados do mezanino; o sorteio tira dois de cada.
-const CANDIDATOS_DEGRAU_ESQ: Array[float] = [216.0, 232.0, 248.0, 264.0, 280.0]
-const CANDIDATOS_DEGRAU_DIR: Array[float] = [344.0, 360.0, 376.0, 392.0, 408.0]
+##
+## As duas faixas são espelhadas, param antes do mezanino do próprio lado e ficam inteiras
+## dentro do alcance de um pulo até ele. O limite do lado de fora não é estético: um degrau
+## que avançasse por baixo de uma plataforma deixaria 16px de altura livre, e o jogador
+## ficaria entalado entre as duas — a invariante 10 recusa isso venha de onde vier.
+const CANDIDATOS_DEGRAU_ESQ: Array[float] = [
+	216.0, 224.0, 232.0, 240.0, 248.0, 256.0, 264.0, 272.0,
+]
+const CANDIDATOS_DEGRAU_DIR: Array[float] = [
+	320.0, 328.0, 336.0, 344.0, 352.0, 360.0, 368.0, 376.0,
+]
 const LARGURA_DEGRAU := 48.0
+
+## Altura livre exigida entre uma plataforma e a superfície embaixo dela para o jogador
+## passar. O corpo dele tem 32px; a folga de 4px evita que raspar na quina conte como
+## passagem.
+const ALTURA_LIVRE := 36.0
 
 ## Quantas demandas de cada quadrante o dia inteiro contém. É o ORÇAMENTO DE DIFICULDADE:
 ## fica fora do sorteio de propósito, porque o ranking global da Etapa 7 compara jogadores
@@ -189,9 +203,18 @@ static func _desenhar(rng: RandomNumberGenerator) -> Dictionary:
 		cantos[categoria] = Vector2(roundf(p.x / 8.0) * 8.0, p.y)
 
 	var degraus: Array[Rect2] = []
-	for x in _escolher(rng, CANDIDATOS_DEGRAU_ESQ, 2, LARGURA_DEGRAU):
+	var esq := _escolher(rng, CANDIDATOS_DEGRAU_ESQ, 2, LARGURA_DEGRAU)
+	for x in esq:
 		degraus.append(Rect2(x, Y_DEGRAU, LARGURA_DEGRAU, 16))
-	for x in _escolher(rng, CANDIDATOS_DEGRAU_DIR, 2, LARGURA_DEGRAU):
+
+	# As duas faixas se tocam no miolo da sala, então o lado direito só pode sacar do que
+	# ainda estiver livre depois do lado esquerdo — dois degraus sobrepostos viram um
+	# bloco só, e os pontos de pouso dos dois se empilham no mesmo lugar.
+	var livres: Array[float] = []
+	for x in CANDIDATOS_DEGRAU_DIR:
+		if esq.is_empty() or x >= esq[esq.size() - 1] + LARGURA_DEGRAU:
+			livres.append(x)
+	for x in _escolher(rng, livres, 2, LARGURA_DEGRAU):
 		degraus.append(Rect2(x, Y_DEGRAU, LARGURA_DEGRAU, 16))
 
 	var layout := {
@@ -236,7 +259,7 @@ static func _escolher(
 
 ## Pontos onde uma demanda pode pousar: qualquer superfície pisável, longe dos cantos.
 ##
-## O passo do chão é 12px e cada degrau rende três pontos, porque com o orçamento em 44 a
+## O passo do chão é 10px e cada degrau rende três pontos, porque com o orçamento em 44 a
 ## contagem de candidatos vira o gargalo: quatro cantos apagam até ~28 candidatos em volta
 ## (regra 7), e numa densidade menor as 50 tentativas falhariam e a fase cairia no layout
 ## de reserva toda partida — virando a fase fixa que o sorteio existe para impedir.
@@ -249,7 +272,7 @@ static func _sortear_pousos(rng: RandomNumberGenerator, layout: Dictionary) -> A
 	while x <= LARGURA - 48.0:
 		if not (_dentro(PEDESTAL_ESQ, x) or _dentro(PEDESTAL_DIR, x)):
 			candidatos.append(Vector2(x, Y_CHAO))
-		x += 12.0
+		x += 10.0
 
 	for plataforma in [MEZANINO_ESQ, MEZANINO_DIR, PEDESTAL_ESQ, PEDESTAL_DIR]:
 		var px: float = plataforma.position.x + 16.0
@@ -464,6 +487,23 @@ static func validar(layout: Dictionary) -> Array[String]:
 		erros.append("a reserva de e-mail (%d) não fecha em bursts de %d"
 			% [RESERVA_EMAIL, EMAIL_POR_ATAQUE])
 
+	# 10. Onde duas plataformas se cruzam na vertical, sobra altura para o jogador passar.
+	#     Cobre dois casos de uma vez: degrau entrando por baixo do mezanino, que prende o
+	#     jogador entre os dois, e dois degraus sobrepostos, que viram um bloco só.
+	var plataformas: Array[Rect2] = [MEZANINO_ESQ, MEZANINO_DIR, PEDESTAL_ESQ, PEDESTAL_DIR]
+	plataformas.append_array(degraus)
+	for i in plataformas.size():
+		for j in range(i + 1, plataformas.size()):
+			var a: Rect2 = plataformas[i]
+			var b: Rect2 = plataformas[j]
+			if a.position.x + a.size.x <= b.position.x or b.position.x + b.size.x <= a.position.x:
+				continue
+			var cima := a if a.position.y <= b.position.y else b
+			var baixo := a if cima == b else b
+			var livre := baixo.position.y - (cima.position.y + cima.size.y)
+			if livre < ALTURA_LIVRE:
+				erros.append("passagem de %.0fpx entre plataformas sobrepostas" % livre)
+
 	return erros
 
 
@@ -498,8 +538,8 @@ static func layout_de_reserva() -> Dictionary:
 	var degraus: Array[Rect2] = [
 		Rect2(216, Y_DEGRAU, LARGURA_DEGRAU, 16),
 		Rect2(264, Y_DEGRAU, LARGURA_DEGRAU, 16),
-		Rect2(344, Y_DEGRAU, LARGURA_DEGRAU, 16),
-		Rect2(392, Y_DEGRAU, LARGURA_DEGRAU, 16),
+		Rect2(328, Y_DEGRAU, LARGURA_DEGRAU, 16),
+		Rect2(376, Y_DEGRAU, LARGURA_DEGRAU, 16),
 	]
 	var layout := {
 		"semente": 0,

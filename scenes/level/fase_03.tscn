@@ -1,13 +1,13 @@
-[gd_scene load_steps=15 format=3]
+[gd_scene format=3 uid="uid://cou1wxongrrsk"]
 
-[ext_resource type="Script" path="res://scripts/fase_03.gd" id="script_fase"]
-[ext_resource type="PackedScene" path="res://scenes/level/camera.tscn" id="cena_camera"]
-[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="cena_player"]
-[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="cena_hud"]
-[ext_resource type="PackedScene" path="res://scenes/tasks/saida.tscn" id="cena_saida"]
+[ext_resource type="PackedScene" uid="uid://dsmybxo0sdq7a" path="res://scenes/level/camera.tscn" id="cena_camera"]
 [ext_resource type="PackedScene" path="res://entities/chefe.tscn" id="cena_chefe"]
-[ext_resource type="Texture2D" path="res://sprites/Parallax Industrial/far-buildings.png" id="tex_predios_longe"]
-[ext_resource type="Texture2D" path="res://sprites/Parallax Industrial/buildings.png" id="tex_predios"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="cena_hud"]
+[ext_resource type="PackedScene" uid="uid://6nnecnog0pw" path="res://scenes/player/player.tscn" id="cena_player"]
+[ext_resource type="PackedScene" path="res://scenes/tasks/saida.tscn" id="cena_saida"]
+[ext_resource type="Script" uid="uid://bmu1h3bjaqdkw" path="res://scripts/fase_03.gd" id="script_fase"]
+[ext_resource type="Texture2D" uid="uid://jdiriibh4dlq" path="res://sprites/Parallax Industrial/buildings.png" id="tex_predios"]
+[ext_resource type="Texture2D" uid="uid://cxlghjktewk0e" path="res://sprites/Parallax Industrial/far-buildings.png" id="tex_predios_longe"]
 
 [sub_resource type="RectangleShape2D" id="Shape_640x32"]
 size = Vector2(640, 32)
@@ -27,365 +27,362 @@ size = Vector2(24, 32)
 [sub_resource type="RectangleShape2D" id="Shape_840x40"]
 size = Vector2(840, 40)
 
-[node name="Fase03" type="Node2D"]
+[node name="Fase03" type="Node2D" unique_id=1522573544]
 script = ExtResource("script_fase")
 
-[node name="Parallax" type="ParallaxBackground" parent="."]
+[node name="Parallax" type="ParallaxBackground" parent="." unique_id=993817158]
 layer = -3
 
-[node name="Ceu" type="ParallaxLayer" parent="Parallax"]
+[node name="Ceu" type="ParallaxLayer" parent="Parallax" unique_id=1369254923]
 motion_scale = Vector2(0, 0)
 
-[node name="Fundo" type="ColorRect" parent="Parallax/Ceu"]
+[node name="Fundo" type="ColorRect" parent="Parallax/Ceu" unique_id=382507084]
 offset_right = 640.0
 offset_bottom = 208.0
-color = Color(0.227451, 0.258824, 0.376471, 1.0)
+color = Color(0.227451, 0.258824, 0.376471, 1)
 
-[node name="Cidade" type="ParallaxLayer" parent="Parallax"]
+[node name="Cidade" type="ParallaxLayer" parent="Parallax" unique_id=1392871388]
 motion_scale = Vector2(0.2, 0)
 motion_mirroring = Vector2(213, 0)
 
-[node name="Arte" type="Sprite2D" parent="Parallax/Cidade"]
-modulate = Color(1.000000, 1.000000, 1.000000, 0.75)
+[node name="Arte" type="Sprite2D" parent="Parallax/Cidade" unique_id=1860694998]
+modulate = Color(1, 1, 1, 0.75)
 position = Vector2(106, 62)
 texture = ExtResource("tex_predios_longe")
 
-[node name="Predios" type="ParallaxLayer" parent="Parallax"]
+[node name="Predios" type="ParallaxLayer" parent="Parallax" unique_id=1293501896]
 motion_scale = Vector2(0.45, 0)
 motion_mirroring = Vector2(272, 0)
 
-[node name="Arte" type="Sprite2D" parent="Parallax/Predios"]
-modulate = Color(1.000000, 1.000000, 1.000000, 1.0)
+[node name="Arte" type="Sprite2D" parent="Parallax/Predios" unique_id=1022640970]
 position = Vector2(136, 66)
 texture = ExtResource("tex_predios")
 
-[node name="Sala" type="Node2D" parent="."]
+[node name="Sala" type="Node2D" parent="." unique_id=727878887]
 z_index = -2
 
-[node name="ParedeTopo" type="Polygon2D" parent="Sala"]
-color = Color(0.180392, 0.164706, 0.200000, 1.0)
-position = Vector2(320.0, 20.0)
-polygon = PackedVector2Array(-320.0, -20.0, 320.0, -20.0, 320.0, 20.0, -320.0, 20.0)
+[node name="ParedeTopo" type="Polygon2D" parent="Sala" unique_id=2023277273]
+position = Vector2(320, 20)
+color = Color(0.180392, 0.164706, 0.2, 1)
+polygon = PackedVector2Array(-320, -20, 320, -20, 320, 20, -320, 20)
 
-[node name="ParedeBase" type="Polygon2D" parent="Sala"]
-color = Color(0.180392, 0.164706, 0.200000, 1.0)
-position = Vector2(320.0, 136.0)
-polygon = PackedVector2Array(-320.0, -56.0, 320.0, -56.0, 320.0, 56.0, -320.0, 56.0)
+[node name="ParedeBase" type="Polygon2D" parent="Sala" unique_id=812644317]
+position = Vector2(320, 136)
+color = Color(0.180392, 0.164706, 0.2, 1)
+polygon = PackedVector2Array(-320, -56, 320, -56, 320, 56, -320, 56)
 
-[node name="ParedeVao0" type="Polygon2D" parent="Sala"]
-color = Color(0.180392, 0.164706, 0.200000, 1.0)
-position = Vector2(84.0, 60.0)
-polygon = PackedVector2Array(-84.0, -20.0, 84.0, -20.0, 84.0, 20.0, -84.0, 20.0)
+[node name="ParedeVao0" type="Polygon2D" parent="Sala" unique_id=1863220342]
+position = Vector2(84, 60)
+color = Color(0.180392, 0.164706, 0.2, 1)
+polygon = PackedVector2Array(-84, -20, 84, -20, 84, 20, -84, 20)
 
-[node name="ParedeVao1" type="Polygon2D" parent="Sala"]
-color = Color(0.180392, 0.164706, 0.200000, 1.0)
-position = Vector2(232.0, 60.0)
-polygon = PackedVector2Array(-16.0, -20.0, 16.0, -20.0, 16.0, 20.0, -16.0, 20.0)
+[node name="ParedeVao1" type="Polygon2D" parent="Sala" unique_id=1907259962]
+position = Vector2(232, 60)
+color = Color(0.180392, 0.164706, 0.2, 1)
+polygon = PackedVector2Array(-16, -20, 16, -20, 16, 20, -16, 20)
 
-[node name="ParedeVao2" type="Polygon2D" parent="Sala"]
-color = Color(0.180392, 0.164706, 0.200000, 1.0)
-position = Vector2(344.0, 60.0)
-polygon = PackedVector2Array(-48.0, -20.0, 48.0, -20.0, 48.0, 20.0, -48.0, 20.0)
+[node name="ParedeVao2" type="Polygon2D" parent="Sala" unique_id=1826689464]
+position = Vector2(344, 60)
+color = Color(0.180392, 0.164706, 0.2, 1)
+polygon = PackedVector2Array(-48, -20, 48, -20, 48, 20, -48, 20)
 
-[node name="ParedeVao3" type="Polygon2D" parent="Sala"]
-color = Color(0.180392, 0.164706, 0.200000, 1.0)
-position = Vector2(456.0, 60.0)
-polygon = PackedVector2Array(-16.0, -20.0, 16.0, -20.0, 16.0, 20.0, -16.0, 20.0)
+[node name="ParedeVao3" type="Polygon2D" parent="Sala" unique_id=1094307653]
+position = Vector2(456, 60)
+color = Color(0.180392, 0.164706, 0.2, 1)
+polygon = PackedVector2Array(-16, -20, 16, -20, 16, 20, -16, 20)
 
-[node name="ParedeVaoFim" type="Polygon2D" parent="Sala"]
-color = Color(0.180392, 0.164706, 0.200000, 1.0)
-position = Vector2(580.0, 60.0)
-polygon = PackedVector2Array(-60.0, -20.0, 60.0, -20.0, 60.0, 20.0, -60.0, 20.0)
+[node name="ParedeVaoFim" type="Polygon2D" parent="Sala" unique_id=2141259624]
+position = Vector2(580, 60)
+color = Color(0.180392, 0.164706, 0.2, 1)
+polygon = PackedVector2Array(-60, -20, 60, -20, 60, 20, -60, 20)
 
-[node name="Caixilho0Esq" type="Polygon2D" parent="Sala"]
-position = Vector2(166, 60.0)
-color = Color(0.290196, 0.266667, 0.325490, 1.0)
-polygon = PackedVector2Array(-2.0, -22.0, 2.0, -22.0, 2.0, 22.0, -2.0, 22.0)
+[node name="Caixilho0Esq" type="Polygon2D" parent="Sala" unique_id=365122425]
+position = Vector2(166, 60)
+color = Color(0.290196, 0.266667, 0.32549, 1)
+polygon = PackedVector2Array(-2, -22, 2, -22, 2, 22, -2, 22)
 
-[node name="Caixilho0Dir" type="Polygon2D" parent="Sala"]
-position = Vector2(218, 60.0)
-color = Color(0.290196, 0.266667, 0.325490, 1.0)
-polygon = PackedVector2Array(-2.0, -22.0, 2.0, -22.0, 2.0, 22.0, -2.0, 22.0)
+[node name="Caixilho0Dir" type="Polygon2D" parent="Sala" unique_id=497458008]
+position = Vector2(218, 60)
+color = Color(0.290196, 0.266667, 0.32549, 1)
+polygon = PackedVector2Array(-2, -22, 2, -22, 2, 22, -2, 22)
 
-[node name="Caixilho0Topo" type="Polygon2D" parent="Sala"]
-position = Vector2(192.0, 38)
-color = Color(0.290196, 0.266667, 0.325490, 1.0)
-polygon = PackedVector2Array(-26.0, -2.0, 26.0, -2.0, 26.0, 2.0, -26.0, 2.0)
+[node name="Caixilho0Topo" type="Polygon2D" parent="Sala" unique_id=2082242523]
+position = Vector2(192, 38)
+color = Color(0.290196, 0.266667, 0.32549, 1)
+polygon = PackedVector2Array(-26, -2, 26, -2, 26, 2, -26, 2)
 
-[node name="Caixilho0Base" type="Polygon2D" parent="Sala"]
-position = Vector2(192.0, 82)
-color = Color(0.290196, 0.266667, 0.325490, 1.0)
-polygon = PackedVector2Array(-26.0, -2.0, 26.0, -2.0, 26.0, 2.0, -26.0, 2.0)
+[node name="Caixilho0Base" type="Polygon2D" parent="Sala" unique_id=1501951462]
+position = Vector2(192, 82)
+color = Color(0.290196, 0.266667, 0.32549, 1)
+polygon = PackedVector2Array(-26, -2, 26, -2, 26, 2, -26, 2)
 
-[node name="Travessa0" type="Polygon2D" parent="Sala"]
-position = Vector2(192.0, 60.0)
-color = Color(0.290196, 0.266667, 0.325490, 1.0)
-polygon = PackedVector2Array(-1.5, -20.0, 1.5, -20.0, 1.5, 20.0, -1.5, 20.0)
+[node name="Travessa0" type="Polygon2D" parent="Sala" unique_id=1031989529]
+position = Vector2(192, 60)
+color = Color(0.290196, 0.266667, 0.32549, 1)
+polygon = PackedVector2Array(-1.5, -20, 1.5, -20, 1.5, 20, -1.5, 20)
 
-[node name="Caixilho1Esq" type="Polygon2D" parent="Sala"]
-position = Vector2(246, 60.0)
-color = Color(0.290196, 0.266667, 0.325490, 1.0)
-polygon = PackedVector2Array(-2.0, -22.0, 2.0, -22.0, 2.0, 22.0, -2.0, 22.0)
+[node name="Caixilho1Esq" type="Polygon2D" parent="Sala" unique_id=1025208852]
+position = Vector2(246, 60)
+color = Color(0.290196, 0.266667, 0.32549, 1)
+polygon = PackedVector2Array(-2, -22, 2, -22, 2, 22, -2, 22)
 
-[node name="Caixilho1Dir" type="Polygon2D" parent="Sala"]
-position = Vector2(298, 60.0)
-color = Color(0.290196, 0.266667, 0.325490, 1.0)
-polygon = PackedVector2Array(-2.0, -22.0, 2.0, -22.0, 2.0, 22.0, -2.0, 22.0)
+[node name="Caixilho1Dir" type="Polygon2D" parent="Sala" unique_id=759106303]
+position = Vector2(298, 60)
+color = Color(0.290196, 0.266667, 0.32549, 1)
+polygon = PackedVector2Array(-2, -22, 2, -22, 2, 22, -2, 22)
 
-[node name="Caixilho1Topo" type="Polygon2D" parent="Sala"]
-position = Vector2(272.0, 38)
-color = Color(0.290196, 0.266667, 0.325490, 1.0)
-polygon = PackedVector2Array(-26.0, -2.0, 26.0, -2.0, 26.0, 2.0, -26.0, 2.0)
+[node name="Caixilho1Topo" type="Polygon2D" parent="Sala" unique_id=1886803208]
+position = Vector2(272, 38)
+color = Color(0.290196, 0.266667, 0.32549, 1)
+polygon = PackedVector2Array(-26, -2, 26, -2, 26, 2, -26, 2)
 
-[node name="Caixilho1Base" type="Polygon2D" parent="Sala"]
-position = Vector2(272.0, 82)
-color = Color(0.290196, 0.266667, 0.325490, 1.0)
-polygon = PackedVector2Array(-26.0, -2.0, 26.0, -2.0, 26.0, 2.0, -26.0, 2.0)
+[node name="Caixilho1Base" type="Polygon2D" parent="Sala" unique_id=60462315]
+position = Vector2(272, 82)
+color = Color(0.290196, 0.266667, 0.32549, 1)
+polygon = PackedVector2Array(-26, -2, 26, -2, 26, 2, -26, 2)
 
-[node name="Travessa1" type="Polygon2D" parent="Sala"]
-position = Vector2(272.0, 60.0)
-color = Color(0.290196, 0.266667, 0.325490, 1.0)
-polygon = PackedVector2Array(-1.5, -20.0, 1.5, -20.0, 1.5, 20.0, -1.5, 20.0)
+[node name="Travessa1" type="Polygon2D" parent="Sala" unique_id=402026790]
+position = Vector2(272, 60)
+color = Color(0.290196, 0.266667, 0.32549, 1)
+polygon = PackedVector2Array(-1.5, -20, 1.5, -20, 1.5, 20, -1.5, 20)
 
-[node name="Caixilho2Esq" type="Polygon2D" parent="Sala"]
-position = Vector2(390, 60.0)
-color = Color(0.290196, 0.266667, 0.325490, 1.0)
-polygon = PackedVector2Array(-2.0, -22.0, 2.0, -22.0, 2.0, 22.0, -2.0, 22.0)
+[node name="Caixilho2Esq" type="Polygon2D" parent="Sala" unique_id=335542481]
+position = Vector2(390, 60)
+color = Color(0.290196, 0.266667, 0.32549, 1)
+polygon = PackedVector2Array(-2, -22, 2, -22, 2, 22, -2, 22)
 
-[node name="Caixilho2Dir" type="Polygon2D" parent="Sala"]
-position = Vector2(442, 60.0)
-color = Color(0.290196, 0.266667, 0.325490, 1.0)
-polygon = PackedVector2Array(-2.0, -22.0, 2.0, -22.0, 2.0, 22.0, -2.0, 22.0)
+[node name="Caixilho2Dir" type="Polygon2D" parent="Sala" unique_id=360804924]
+position = Vector2(442, 60)
+color = Color(0.290196, 0.266667, 0.32549, 1)
+polygon = PackedVector2Array(-2, -22, 2, -22, 2, 22, -2, 22)
 
-[node name="Caixilho2Topo" type="Polygon2D" parent="Sala"]
-position = Vector2(416.0, 38)
-color = Color(0.290196, 0.266667, 0.325490, 1.0)
-polygon = PackedVector2Array(-26.0, -2.0, 26.0, -2.0, 26.0, 2.0, -26.0, 2.0)
+[node name="Caixilho2Topo" type="Polygon2D" parent="Sala" unique_id=814030625]
+position = Vector2(416, 38)
+color = Color(0.290196, 0.266667, 0.32549, 1)
+polygon = PackedVector2Array(-26, -2, 26, -2, 26, 2, -26, 2)
 
-[node name="Caixilho2Base" type="Polygon2D" parent="Sala"]
-position = Vector2(416.0, 82)
-color = Color(0.290196, 0.266667, 0.325490, 1.0)
-polygon = PackedVector2Array(-26.0, -2.0, 26.0, -2.0, 26.0, 2.0, -26.0, 2.0)
+[node name="Caixilho2Base" type="Polygon2D" parent="Sala" unique_id=1294914585]
+position = Vector2(416, 82)
+color = Color(0.290196, 0.266667, 0.32549, 1)
+polygon = PackedVector2Array(-26, -2, 26, -2, 26, 2, -26, 2)
 
-[node name="Travessa2" type="Polygon2D" parent="Sala"]
-position = Vector2(416.0, 60.0)
-color = Color(0.290196, 0.266667, 0.325490, 1.0)
-polygon = PackedVector2Array(-1.5, -20.0, 1.5, -20.0, 1.5, 20.0, -1.5, 20.0)
+[node name="Travessa2" type="Polygon2D" parent="Sala" unique_id=594750791]
+position = Vector2(416, 60)
+color = Color(0.290196, 0.266667, 0.32549, 1)
+polygon = PackedVector2Array(-1.5, -20, 1.5, -20, 1.5, 20, -1.5, 20)
 
-[node name="Caixilho3Esq" type="Polygon2D" parent="Sala"]
-position = Vector2(470, 60.0)
-color = Color(0.290196, 0.266667, 0.325490, 1.0)
-polygon = PackedVector2Array(-2.0, -22.0, 2.0, -22.0, 2.0, 22.0, -2.0, 22.0)
+[node name="Caixilho3Esq" type="Polygon2D" parent="Sala" unique_id=98888803]
+position = Vector2(470, 60)
+color = Color(0.290196, 0.266667, 0.32549, 1)
+polygon = PackedVector2Array(-2, -22, 2, -22, 2, 22, -2, 22)
 
-[node name="Caixilho3Dir" type="Polygon2D" parent="Sala"]
-position = Vector2(522, 60.0)
-color = Color(0.290196, 0.266667, 0.325490, 1.0)
-polygon = PackedVector2Array(-2.0, -22.0, 2.0, -22.0, 2.0, 22.0, -2.0, 22.0)
+[node name="Caixilho3Dir" type="Polygon2D" parent="Sala" unique_id=710719590]
+position = Vector2(522, 60)
+color = Color(0.290196, 0.266667, 0.32549, 1)
+polygon = PackedVector2Array(-2, -22, 2, -22, 2, 22, -2, 22)
 
-[node name="Caixilho3Topo" type="Polygon2D" parent="Sala"]
-position = Vector2(496.0, 38)
-color = Color(0.290196, 0.266667, 0.325490, 1.0)
-polygon = PackedVector2Array(-26.0, -2.0, 26.0, -2.0, 26.0, 2.0, -26.0, 2.0)
+[node name="Caixilho3Topo" type="Polygon2D" parent="Sala" unique_id=1337164863]
+position = Vector2(496, 38)
+color = Color(0.290196, 0.266667, 0.32549, 1)
+polygon = PackedVector2Array(-26, -2, 26, -2, 26, 2, -26, 2)
 
-[node name="Caixilho3Base" type="Polygon2D" parent="Sala"]
-position = Vector2(496.0, 82)
-color = Color(0.290196, 0.266667, 0.325490, 1.0)
-polygon = PackedVector2Array(-26.0, -2.0, 26.0, -2.0, 26.0, 2.0, -26.0, 2.0)
+[node name="Caixilho3Base" type="Polygon2D" parent="Sala" unique_id=2123551438]
+position = Vector2(496, 82)
+color = Color(0.290196, 0.266667, 0.32549, 1)
+polygon = PackedVector2Array(-26, -2, 26, -2, 26, 2, -26, 2)
 
-[node name="Travessa3" type="Polygon2D" parent="Sala"]
-position = Vector2(496.0, 60.0)
-color = Color(0.290196, 0.266667, 0.325490, 1.0)
-polygon = PackedVector2Array(-1.5, -20.0, 1.5, -20.0, 1.5, 20.0, -1.5, 20.0)
+[node name="Travessa3" type="Polygon2D" parent="Sala" unique_id=169826554]
+position = Vector2(496, 60)
+color = Color(0.290196, 0.266667, 0.32549, 1)
+polygon = PackedVector2Array(-1.5, -20, 1.5, -20, 1.5, 20, -1.5, 20)
 
-[node name="Quadro0" type="Polygon2D" parent="Sala"]
+[node name="Quadro0" type="Polygon2D" parent="Sala" unique_id=1069135357]
 position = Vector2(64, 100)
-color = Color(0.415686, 0.372549, 0.305882, 1.0)
-polygon = PackedVector2Array(-11.0, -8.0, 11.0, -8.0, 11.0, 8.0, -11.0, 8.0)
+color = Color(0.415686, 0.372549, 0.305882, 1)
+polygon = PackedVector2Array(-11, -8, 11, -8, 11, 8, -11, 8)
 
-[node name="Quadro0Tela" type="Polygon2D" parent="Sala"]
+[node name="Quadro0Tela" type="Polygon2D" parent="Sala" unique_id=1368145196]
 position = Vector2(64, 100)
-color = Color(0.552941, 0.607843, 0.690196, 1.0)
-polygon = PackedVector2Array(-8.0, -5.0, 8.0, -5.0, 8.0, 5.0, -8.0, 5.0)
+color = Color(0.552941, 0.607843, 0.690196, 1)
+polygon = PackedVector2Array(-8, -5, 8, -5, 8, 5, -8, 5)
 
-[node name="Quadro1" type="Polygon2D" parent="Sala"]
+[node name="Quadro1" type="Polygon2D" parent="Sala" unique_id=2035710011]
 position = Vector2(576, 100)
-color = Color(0.415686, 0.372549, 0.305882, 1.0)
-polygon = PackedVector2Array(-11.0, -8.0, 11.0, -8.0, 11.0, 8.0, -11.0, 8.0)
+color = Color(0.415686, 0.372549, 0.305882, 1)
+polygon = PackedVector2Array(-11, -8, 11, -8, 11, 8, -11, 8)
 
-[node name="Quadro1Tela" type="Polygon2D" parent="Sala"]
+[node name="Quadro1Tela" type="Polygon2D" parent="Sala" unique_id=1410176728]
 position = Vector2(576, 100)
-color = Color(0.552941, 0.607843, 0.690196, 1.0)
-polygon = PackedVector2Array(-8.0, -5.0, 8.0, -5.0, 8.0, 5.0, -8.0, 5.0)
+color = Color(0.552941, 0.607843, 0.690196, 1)
+polygon = PackedVector2Array(-8, -5, 8, -5, 8, 5, -8, 5)
 
-[node name="Rodape" type="Polygon2D" parent="Sala"]
-color = Color(0.231373, 0.207843, 0.254902, 1.0)
+[node name="Rodape" type="Polygon2D" parent="Sala" unique_id=1586317414]
 position = Vector2(320, 188)
-polygon = PackedVector2Array(-320.0, -4.0, 320.0, -4.0, 320.0, 4.0, -320.0, 4.0)
+color = Color(0.231373, 0.207843, 0.254902, 1)
+polygon = PackedVector2Array(-320, -4, 320, -4, 320, 4, -320, 4)
 
-[node name="Podio" type="Polygon2D" parent="Sala"]
+[node name="Podio" type="Polygon2D" parent="Sala" unique_id=618734158]
 position = Vector2(320, 82)
-color = Color(0.262745, 0.196078, 0.227451, 1.0)
-polygon = PackedVector2Array(-36.0, -5.0, 36.0, -5.0, 36.0, 5.0, -36.0, 5.0)
+color = Color(0.262745, 0.196078, 0.227451, 1)
+polygon = PackedVector2Array(-36, -5, 36, -5, 36, 5, -36, 5)
 
-[node name="PodioTopo" type="Polygon2D" parent="Sala"]
+[node name="PodioTopo" type="Polygon2D" parent="Sala" unique_id=1942181496]
 position = Vector2(320, 78)
-color = Color(0.419608, 0.309804, 0.349020, 1.0)
-polygon = PackedVector2Array(-40.0, -2.0, 40.0, -2.0, 40.0, 2.0, -40.0, 2.0)
+color = Color(0.419608, 0.309804, 0.34902, 1)
+polygon = PackedVector2Array(-40, -2, 40, -2, 40, 2, -40, 2)
 
-[node name="HasteEsq" type="Polygon2D" parent="Sala"]
-position = Vector2(290, 38.0)
-color = Color(0.262745, 0.196078, 0.227451, 1.0)
-polygon = PackedVector2Array(-1.5, -38.0, 1.5, -38.0, 1.5, 38.0, -1.5, 38.0)
+[node name="HasteEsq" type="Polygon2D" parent="Sala" unique_id=249871501]
+position = Vector2(290, 38)
+color = Color(0.262745, 0.196078, 0.227451, 1)
+polygon = PackedVector2Array(-1.5, -38, 1.5, -38, 1.5, 38, -1.5, 38)
 
-[node name="HasteDir" type="Polygon2D" parent="Sala"]
-position = Vector2(350, 38.0)
-color = Color(0.262745, 0.196078, 0.227451, 1.0)
-polygon = PackedVector2Array(-1.5, -38.0, 1.5, -38.0, 1.5, 38.0, -1.5, 38.0)
+[node name="HasteDir" type="Polygon2D" parent="Sala" unique_id=1739103006]
+position = Vector2(350, 38)
+color = Color(0.262745, 0.196078, 0.227451, 1)
+polygon = PackedVector2Array(-1.5, -38, 1.5, -38, 1.5, 38, -1.5, 38)
 
-[node name="Colisores" type="Node2D" parent="."]
+[node name="Colisores" type="Node2D" parent="." unique_id=866805291]
 
-[node name="Piso" type="StaticBody2D" parent="Colisores"]
-position = Vector2(320.0, 208)
+[node name="Piso" type="StaticBody2D" parent="Colisores" unique_id=2095097249]
+position = Vector2(320, 208)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Colisores/Piso"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Colisores/Piso" unique_id=24589564]
 shape = SubResource("Shape_640x32")
 
-[node name="PedestalEsq" type="StaticBody2D" parent="Colisores"]
-position = Vector2(88.0, 176.0)
+[node name="PedestalEsq" type="StaticBody2D" parent="Colisores" unique_id=750146239]
+position = Vector2(88, 176)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Colisores/PedestalEsq"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Colisores/PedestalEsq" unique_id=1066158658]
 shape = SubResource("Shape_96x32")
 
-[node name="PedestalDir" type="StaticBody2D" parent="Colisores"]
-position = Vector2(552.0, 176.0)
+[node name="PedestalDir" type="StaticBody2D" parent="Colisores" unique_id=37074412]
+position = Vector2(552, 176)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Colisores/PedestalDir"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Colisores/PedestalDir" unique_id=1277988187]
 shape = SubResource("Shape_96x32")
 
-[node name="MezaninoEsq" type="StaticBody2D" parent="Colisores"]
-position = Vector2(152.0, 112.0)
+[node name="MezaninoEsq" type="StaticBody2D" parent="Colisores" unique_id=124759978]
+position = Vector2(152, 112)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Colisores/MezaninoEsq"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Colisores/MezaninoEsq" unique_id=615194014]
 shape = SubResource("Shape_112x16")
 
-[node name="MezaninoDir" type="StaticBody2D" parent="Colisores"]
-position = Vector2(488.0, 112.0)
+[node name="MezaninoDir" type="StaticBody2D" parent="Colisores" unique_id=392462719]
+position = Vector2(488, 112)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Colisores/MezaninoDir"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Colisores/MezaninoDir" unique_id=28275570]
 shape = SubResource("Shape_112x16")
 
-[node name="ParedeEsq" type="StaticBody2D" parent="Colisores"]
-position = Vector2(-8, 104.0)
+[node name="ParedeEsq" type="StaticBody2D" parent="Colisores" unique_id=448653746]
+position = Vector2(-8, 104)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Colisores/ParedeEsq"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Colisores/ParedeEsq" unique_id=1242660328]
 shape = SubResource("Shape_16x272")
 
-[node name="ParedeDir" type="StaticBody2D" parent="Colisores"]
-position = Vector2(648, 104.0)
+[node name="ParedeDir" type="StaticBody2D" parent="Colisores" unique_id=2087430197]
+position = Vector2(648, 104)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Colisores/ParedeDir"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Colisores/ParedeDir" unique_id=828077792]
 shape = SubResource("Shape_16x272")
 
-[node name="Superficies" type="Node2D" parent="."]
+[node name="Superficies" type="Node2D" parent="." unique_id=2042331706]
 z_index = -1
 
-[node name="Piso" type="Polygon2D" parent="Superficies"]
-position = Vector2(320.0, 208)
-color = Color(0.290196, 0.250980, 0.219608, 1.0)
-polygon = PackedVector2Array(-320.0, -16.0, 320.0, -16.0, 320.0, 16.0, -320.0, 16.0)
+[node name="Piso" type="Polygon2D" parent="Superficies" unique_id=2004330379]
+position = Vector2(320, 208)
+color = Color(0.290196, 0.25098, 0.219608, 1)
+polygon = PackedVector2Array(-320, -16, 320, -16, 320, 16, -320, 16)
 
-[node name="PisoTopo" type="Polygon2D" parent="Superficies"]
-position = Vector2(320.0, 194.0)
-color = Color(0.435294, 0.380392, 0.321569, 1.0)
-polygon = PackedVector2Array(-320.0, -2.0, 320.0, -2.0, 320.0, 2.0, -320.0, 2.0)
+[node name="PisoTopo" type="Polygon2D" parent="Superficies" unique_id=455447248]
+position = Vector2(320, 194)
+color = Color(0.435294, 0.380392, 0.321569, 1)
+polygon = PackedVector2Array(-320, -2, 320, -2, 320, 2, -320, 2)
 
-[node name="PedEsq" type="Polygon2D" parent="Superficies"]
-position = Vector2(88.0, 176.0)
-color = Color(0.360784, 0.317647, 0.258824, 1.0)
-polygon = PackedVector2Array(-48.0, -16.0, 48.0, -16.0, 48.0, 16.0, -48.0, 16.0)
+[node name="PedEsq" type="Polygon2D" parent="Superficies" unique_id=918509939]
+position = Vector2(88, 176)
+color = Color(0.360784, 0.317647, 0.258824, 1)
+polygon = PackedVector2Array(-48, -16, 48, -16, 48, 16, -48, 16)
 
-[node name="PedEsqTopo" type="Polygon2D" parent="Superficies"]
-position = Vector2(88.0, 162.0)
-color = Color(0.541176, 0.478431, 0.388235, 1.0)
-polygon = PackedVector2Array(-48.0, -2.0, 48.0, -2.0, 48.0, 2.0, -48.0, 2.0)
+[node name="PedEsqTopo" type="Polygon2D" parent="Superficies" unique_id=626101758]
+position = Vector2(88, 162)
+color = Color(0.541176, 0.478431, 0.388235, 1)
+polygon = PackedVector2Array(-48, -2, 48, -2, 48, 2, -48, 2)
 
-[node name="PedDir" type="Polygon2D" parent="Superficies"]
-position = Vector2(552.0, 176.0)
-color = Color(0.360784, 0.317647, 0.258824, 1.0)
-polygon = PackedVector2Array(-48.0, -16.0, 48.0, -16.0, 48.0, 16.0, -48.0, 16.0)
+[node name="PedDir" type="Polygon2D" parent="Superficies" unique_id=986410207]
+position = Vector2(552, 176)
+color = Color(0.360784, 0.317647, 0.258824, 1)
+polygon = PackedVector2Array(-48, -16, 48, -16, 48, 16, -48, 16)
 
-[node name="PedDirTopo" type="Polygon2D" parent="Superficies"]
-position = Vector2(552.0, 162.0)
-color = Color(0.541176, 0.478431, 0.388235, 1.0)
-polygon = PackedVector2Array(-48.0, -2.0, 48.0, -2.0, 48.0, 2.0, -48.0, 2.0)
+[node name="PedDirTopo" type="Polygon2D" parent="Superficies" unique_id=46478009]
+position = Vector2(552, 162)
+color = Color(0.541176, 0.478431, 0.388235, 1)
+polygon = PackedVector2Array(-48, -2, 48, -2, 48, 2, -48, 2)
 
-[node name="MezEsq" type="Polygon2D" parent="Superficies"]
-position = Vector2(152.0, 112.0)
-color = Color(0.360784, 0.317647, 0.258824, 1.0)
-polygon = PackedVector2Array(-56.0, -8.0, 56.0, -8.0, 56.0, 8.0, -56.0, 8.0)
+[node name="MezEsq" type="Polygon2D" parent="Superficies" unique_id=1581107777]
+position = Vector2(152, 112)
+color = Color(0.360784, 0.317647, 0.258824, 1)
+polygon = PackedVector2Array(-56, -8, 56, -8, 56, 8, -56, 8)
 
-[node name="MezEsqTopo" type="Polygon2D" parent="Superficies"]
-position = Vector2(152.0, 106.0)
-color = Color(0.541176, 0.478431, 0.388235, 1.0)
-polygon = PackedVector2Array(-56.0, -2.0, 56.0, -2.0, 56.0, 2.0, -56.0, 2.0)
+[node name="MezEsqTopo" type="Polygon2D" parent="Superficies" unique_id=851291609]
+position = Vector2(152, 106)
+color = Color(0.541176, 0.478431, 0.388235, 1)
+polygon = PackedVector2Array(-56, -2, 56, -2, 56, 2, -56, 2)
 
-[node name="MezDir" type="Polygon2D" parent="Superficies"]
-position = Vector2(488.0, 112.0)
-color = Color(0.360784, 0.317647, 0.258824, 1.0)
-polygon = PackedVector2Array(-56.0, -8.0, 56.0, -8.0, 56.0, 8.0, -56.0, 8.0)
+[node name="MezDir" type="Polygon2D" parent="Superficies" unique_id=1485470941]
+position = Vector2(488, 112)
+color = Color(0.360784, 0.317647, 0.258824, 1)
+polygon = PackedVector2Array(-56, -8, 56, -8, 56, 8, -56, 8)
 
-[node name="MezDirTopo" type="Polygon2D" parent="Superficies"]
-position = Vector2(488.0, 106.0)
-color = Color(0.541176, 0.478431, 0.388235, 1.0)
-polygon = PackedVector2Array(-56.0, -2.0, 56.0, -2.0, 56.0, 2.0, -56.0, 2.0)
+[node name="MezDirTopo" type="Polygon2D" parent="Superficies" unique_id=1249906125]
+position = Vector2(488, 106)
+color = Color(0.541176, 0.478431, 0.388235, 1)
+polygon = PackedVector2Array(-56, -2, 56, -2, 56, 2, -56, 2)
 
-[node name="Piche" type="Polygon2D" parent="."]
-z_index = 2
+[node name="Piche" type="Polygon2D" parent="." unique_id=1022391969]
 visible = false
+z_index = 2
 position = Vector2(0, 192)
-color = Color(0.227451, 0.172549, 0.117647, 1.0)
+color = Color(0.227451, 0.172549, 0.117647, 1)
 polygon = PackedVector2Array(0, 0, 640, 0, 640, 8, 0, 8)
 
-[node name="Zonas" type="Node2D" parent="."]
+[node name="Zonas" type="Node2D" parent="." unique_id=914981227]
 
-[node name="Tarefas" type="Node2D" parent="."]
+[node name="Tarefas" type="Node2D" parent="." unique_id=1428281897]
 
-[node name="Bifurcacoes" type="Node2D" parent="."]
+[node name="Bifurcacoes" type="Node2D" parent="." unique_id=1524256717]
 
-[node name="Checkpoints" type="Node2D" parent="."]
+[node name="Checkpoints" type="Node2D" parent="." unique_id=690564183]
 
-[node name="Checkpoint0" type="Area2D" parent="Checkpoints"]
+[node name="Checkpoint0" type="Area2D" parent="Checkpoints" unique_id=1228334558]
 position = Vector2(320, 176)
 collision_layer = 0
 collision_mask = 2
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Checkpoints/Checkpoint0"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Checkpoints/Checkpoint0" unique_id=168481957]
 shape = SubResource("Shape_24x32")
 
-[node name="Inimigos" type="Node2D" parent="."]
+[node name="Inimigos" type="Node2D" parent="." unique_id=1528404902]
 
-[node name="Chefe" parent="Inimigos" instance=ExtResource("cena_chefe")]
+[node name="Chefe" parent="Inimigos" unique_id=1759706562 instance=ExtResource("cena_chefe")]
 position = Vector2(320, 56)
 
-[node name="Saida" parent="." instance=ExtResource("cena_saida")]
+[node name="Saida" parent="." unique_id=847165806 instance=ExtResource("cena_saida")]
 position = Vector2(624, 192)
 
-[node name="ZonaDeQueda" type="Area2D" parent="."]
+[node name="ZonaDeQueda" type="Area2D" parent="." unique_id=230458860]
 position = Vector2(320, 298)
 collision_layer = 0
 collision_mask = 2
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="ZonaDeQueda"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ZonaDeQueda" unique_id=1614350975]
 shape = SubResource("Shape_840x40")
 
-[node name="Camera" parent="." instance=ExtResource("cena_camera")]
+[node name="Camera" parent="." unique_id=1126751966 instance=ExtResource("cena_camera")]
 position = Vector2(320, 104)
-limit_left = 0
 limit_top = 0
 limit_right = 640
-limit_bottom = 208
 
-[node name="Player" parent="." instance=ExtResource("cena_player")]
+[node name="Player" parent="." unique_id=284575923 instance=ExtResource("cena_player")]
 position = Vector2(320, 176)
 
-[node name="HUD" parent="." instance=ExtResource("cena_hud")]
+[node name="HUD" parent="." unique_id=1906823689 instance=ExtResource("cena_hud")]

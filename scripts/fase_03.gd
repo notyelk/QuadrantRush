@@ -82,11 +82,23 @@ func vitoria_por_tempo() -> bool:
 	return true
 
 
+## A arena cabe numa tela só: não há percurso a percorrer, e uma barra de progresso
+## parada num extremo o expediente inteiro só ocuparia espaço no alto.
+func usa_percurso() -> bool:
+	return false
+
+
 ## Não há elevador nesta fase: não existe cota de urgentes a cumprir para sair. Devolver 0
 ## também esconde o contador do HUD (ver hud.atualizar_urgentes), que é o certo — "0 de 0"
 ## parado no alto seria ruído permanente.
 func meta_de_urgentes() -> int:
 	return 0
+
+
+## E a porta em si sai da fase. Aqui o expediente acaba pelo relógio, não por uma saída:
+## um elevador na arena encerraria o dia a qualquer momento, sem enfrentar a reunião.
+func usa_saida() -> bool:
+	return false
 
 
 ## A composição do dia é o ORÇAMENTO do sorteio, e não os filhos do nó Tarefas.
@@ -105,7 +117,7 @@ func _mapear_composicao() -> Dictionary:
 func abertura() -> Array:
 	return [
 		"REUNIÃO DE ENCERRAMENTO",
-		"Pegue um papel e POUSE no canto certo. O papel vence na mão. Sobreviva aos 100s.",
+		"Você vence quando o relógio zerar. Leve cada papel ao canto do quadrante dele.",
 		Color("e07a94"),
 	]
 
@@ -139,6 +151,10 @@ func _preparar() -> void:
 	# aqui o trabalho é atravessar a sala contra o relógio de validade do papel.
 	jogador.pulo_duplo = true
 	jogador.arranque = true
+	# Depois da abertura, que ocupa a faixa por 2,6s. Duas habilidades que só existem
+	# neste dia precisam de anúncio próprio: quem chega aqui vem de dois expedientes
+	# inteiros em que pular no ar não fazia nada.
+	get_tree().create_timer(3.0).timeout.connect(_anunciar_habilidades)
 
 	layout = Sorteio.sortear(semente)
 
@@ -197,6 +213,16 @@ func _montar_degraus() -> void:
 		corpo.add_child(topo)
 
 		colisores.add_child(corpo)
+
+
+func _anunciar_habilidades() -> void:
+	if not GameManager.em_jogo:
+		return
+	get_tree().call_group(
+		"hud", "mostrar_dica", "HOJE VOCÊ TEM PULO DUPLO",
+		"Pule de novo no ar para alcançar o mezanino. Espaço dá um arranque.",
+		Color("e0a458"), 3
+	)
 
 
 func _montar_zonas() -> void:
@@ -339,11 +365,8 @@ func _soltar_papel(categoria: int, pouso: Vector2) -> void:
 
 func _ao_apodrecer(demanda: Node) -> void:
 	pilha.apodreceu(demanda.categoria)
-	var texto := "Um papel apodreceu no chão. A pilha subiu."
-	if demanda.na_mao_ao_vencer:
-		texto = "Venceu na sua mão. Segurar não é resolver."
 	get_tree().call_group(
-		"hud", "mostrar_dica", "PENDÊNCIA", texto,
+		"hud", "mostrar_dica", "PENDÊNCIA", "Um papel apodreceu no chão. A pilha subiu.",
 		GameManager.COR_CATEGORIA[demanda.categoria], 2
 	)
 

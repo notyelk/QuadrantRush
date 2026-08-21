@@ -12,6 +12,10 @@ extends Node2D
 ## coletadas é fase_01.gd, que chama liberar() no momento certo.
 
 signal alcancada
+## Emitido quando o jogador chega ao elevador e ele ainda está trancado. Quem decide o
+## que isso significa é a fase: se ainda houver urgente ao alcance é aviso, se não
+## houver mais nenhuma o dia acabou.
+signal barrada
 
 @onready var bloqueio: StaticBody2D = $Bloqueio
 @onready var gatilho: Area2D = $Gatilho
@@ -32,15 +36,29 @@ var pendentes := 0
 ## O pulso da lâmpada, guardado para poder ser parado se a saída trancar de novo.
 var _pulso: Tween = null
 
+## Desligada por desativar(). Uma fase sem elevador não pode ter a porta liberada por
+## efeito colateral de coletar uma urgente.
+var _desativada := false
+
 
 func _ready() -> void:
 	gatilho.body_entered.connect(_ao_entrar)
 	_atualizar_luz()
 
 
+## Tira o elevador da fase. A Fase 3 é uma arena de tela única em que sobreviver ao
+## relógio é a vitória: uma porta ali seria um botão de encerrar o expediente sem
+## enfrentá-lo.
+func desativar() -> void:
+	_desativada = true
+	visible = false
+	bloqueio.get_node("CollisionShape2D").set_deferred("disabled", true)
+	gatilho.set_deferred("monitoring", false)
+
+
 ## Chamada por fase_01.gd quando todas as Q1 foram coletadas.
 func liberar() -> void:
-	if liberada:
+	if liberada or _desativada:
 		return
 	liberada = true
 	# set_deferred: desligar colisão no meio do processamento de física do Godot
@@ -72,7 +90,7 @@ func liberar() -> void:
 ## obrigatórias", e amadurecer cria uma urgente a mais. A porta só volta ao estado que
 ## corresponde à conta.
 func trancar() -> void:
-	if not liberada:
+	if not liberada or _desativada:
 		return
 	liberada = false
 	bloqueio.get_node("CollisionShape2D").set_deferred("disabled", false)
@@ -85,10 +103,16 @@ func trancar() -> void:
 
 
 func _ao_entrar(corpo: Node2D) -> void:
-	if not corpo.is_in_group("Player") or not GameManager.em_jogo:
+	if _desativada or not corpo.is_in_group("Player") or not GameManager.em_jogo:
 		return
 
 	if not liberada:
+		barrada.emit()
+		# A fase pode ter encerrado o expediente aqui. Chegar ao elevador sem nenhuma
+		# urgente ao alcance não é um aviso: não há mais o que voltar a resolver.
+		if not GameManager.em_jogo:
+			return
+
 		Audio.tocar("travado")
 		Juice.tremer(0.2)
 		var texto := "Resolva as tarefas urgentes e importantes antes de sair."

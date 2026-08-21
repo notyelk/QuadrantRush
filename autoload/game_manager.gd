@@ -371,7 +371,7 @@ func registrar_acao(categoria: Categoria, acao: Acao, enunciado: String = "") ->
 
 	pontuacao_mudou.emit(pontuacao_total)
 	if delta_tempo != 0.0:
-		_alterar_tempo(delta_tempo)
+		_penalizar_tempo(delta_tempo)
 
 	tarefa_registrada.emit(categoria, acao, pontos, delta_tempo)
 	return {"pontos": pontos, "delta_tempo": delta_tempo}
@@ -382,7 +382,18 @@ func registrar_acao(categoria: Categoria, acao: Acao, enunciado: String = "") ->
 func descontar_tempo(segundos: float) -> void:
 	if not em_jogo:
 		return
-	_alterar_tempo(-absf(segundos))
+	_penalizar_tempo(-absf(segundos))
+
+
+## Penalidade de tempo, venha ela do Quadro 1 ou de um perigo de cenário.
+##
+## No dia em que esgotar o relógio é VENCER, ela não pode ser aplicada: adiantar o fim do
+## expediente transformaria cada castigo num atalho para a vitória, e errar de propósito
+## passaria a ser a estratégia mais rápida. Ali a punição é a pilha de pendências.
+func _penalizar_tempo(delta: float) -> void:
+	if vitoria_ao_esgotar_tempo:
+		return
+	_alterar_tempo(delta)
 
 
 ## Uma interrupção (Fase 2): custa segundos e rouba a atenção por um instante. O desconto

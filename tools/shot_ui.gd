@@ -11,6 +11,8 @@ extends Node
 const DESTINO := "user://shots_ui/"
 const QUADROS_DE_ESPERA := 10
 
+var _nuvem := ""
+
 
 func _ready() -> void:
 	# A foto do menu de pausa é tirada com a árvore pausada; sem isto este próprio
@@ -21,6 +23,13 @@ func _ready() -> void:
 	# O ranking é lido de um arquivo descartável para que fotografar não misture partidas
 	# de mentira no histórico real de quem estiver jogando nesta máquina.
 	SupabaseClient.caminho_local = "user://shots_ranking.cfg"
+
+	# A tela de resultado envia a partida ao abrir. São quatro telas de resultado aqui, e
+	# com a nuvem ligada cada rodada de fotos gravaria quatro partidas de mentira no
+	# ranking de verdade. Ela volta a valer na hora de fotografar o próprio ranking, que é
+	# só leitura.
+	_nuvem = SupabaseClient.supabase_url
+	SupabaseClient.supabase_url = ""
 
 	await _titulo_vazio()
 	await _titulo_preenchido()
@@ -245,6 +254,7 @@ func _composicao() -> Dictionary:
 ## contagens coloridas por quadrante cabendo na largura de 400px.
 func _ranking() -> void:
 	Perfil.nickname = "Kleytonn"
+	SupabaseClient.supabase_url = _nuvem
 	DirAccess.remove_absolute(
 		ProjectSettings.globalize_path(SupabaseClient.caminho_local)
 	)

@@ -24,6 +24,9 @@ Vocabulario de tile (Little Bits Office, CC0 -- ver CREDITOS.md):
 from __future__ import annotations
 
 import base64
+import re
+import shutil
+import sys
 import math
 import os
 import struct
@@ -290,15 +293,14 @@ BIFURCACOES = [
     (2500, "Ligacao de fornecedor para o setor errado"),
 ]
 
-# Os tres colegas. Um por bifurcacao Q3: delegar levanta ele da bandeja e ele vai ate um
-# alvo mudar alguma coisa do corredor adiante -- ver scripts/colega.gd.
+# O colega. Delegar a Q3 dele o levanta da bandeja: ele desce, caminha ate um alvo e o
+# aciona -- ver scripts/colega.gd.
 #
 #   bifurcacao  indice em BIFURCACOES (de onde a delegacao parte)
 #   x, y        onde ele fica sentado (pes) na bandeja, ao lado do ponto de delegar
 #   alvo_x      onde o alvo dele fica
 #   tipo        "perto" = paga sempre | "longe" = so paga para quem se desviou
-#   assume      faixa (x0, x1) de onde ele tira as distracoes, ou None
-#   corpo       nome do StaticBody2D que ele torna solido, ou None
+#   corpo       nome do StaticBody2D que ele torna solido
 #
 # O "tipo" nao e rotulo: sai da conta dos 630px (design, secao 6.1) e o validador confere
 # que a posicao escolhida realmente produz o comportamento que o design pediu. Sem essa
@@ -306,37 +308,17 @@ BIFURCACOES = [
 # perceberia olhando o jogo rodar.
 COLEGAS = [
     {
-        "bifurcacao": 0, "x": 1170, "y": 128,
-        "nome": "CorredorAssumido", "alvo_x": 2000, "tipo": "longe",
-        # 840px de caminhada. O jogador cobre isso em 4,7s e o colega em 6,0s, mas o
-        # jogador ainda perde ~1s descendo da bandeja: a corrida e decidida por meio
-        # segundo. Quem faz o desvio do mezanino perde de longe -- e ganha o corredor
-        # limpo. E o exemplo mais direto de "delegar cedo e investir se pagam juntos".
-        "assume": (1900, 2260),
-        "corpo": None,
-        "mensagem": "O colega assumiu duas distracoes la na frente",
-    },
-    {
-        "bifurcacao": 1, "x": 2330, "y": 128,
-        "nome": "ReuniaoAssumida", "alvo_x": 2400, "tipo": "perto",
-        # 110px: ele chega antes de qualquer jogador. E o par que ENSINA a mecanica --
-        # delegou, viu as duas distracoes do fim sumirem, entendeu para que serve subir.
-        "assume": (2560, 2880),
-        "corpo": None,
-        "mensagem": "",
-    },
-    {
         "bifurcacao": 2, "x": 2510, "y": 128,
         "nome": "EscadaDelegada", "alvo_x": 2760, "tipo": "perto",
         # 260px. O unico alvo que muda GEOMETRIA: sem ele a prateleira da ultima Q2 fica
         # 80px acima do chao, contra 62,5px de pulo -- inalcancavel. Ou seja, nao existem
         # 1.060 pontos sem delegar. Isso e fiel ao Quadro 1, que ja diz que delegar (+60)
         # vale mais que resolver (+40): o jogo so passou a dizer o mesmo com geometria.
-        "assume": None,
         "corpo": "EscadaDelegada",
         "mensagem": "O colega baixou a escada do arquivo",
     },
 ]
+
 VELOCIDADE_COLEGA = 140.0
 DIANTEIRA_COLEGA = 1.0      # segundos que o jogador gasta descendo da bandeja
 
@@ -387,16 +369,6 @@ BALCAO_POS = (272, 153)
 # Travessias OBRIGATORIAS: (nome, x0, y0, x1, y1). Sao os pulos que a rota principal
 # exige de qualquer jogador. Desvio opcional (esporao de Q2) nao entra aqui -- se ficar
 # dificil, e escolha do jogador; se a rota principal ficar impossivel, e bug.
-def q4_da_faixa(faixa: tuple[int, int]) -> list[int]:
-    """Indices em TAREFAS das distracoes que um colega assume.
-
-    Filtra por categoria em vez de por posicao pura: uma faixa larga inevitavelmente
-    engloba Q1 e Q2 vizinhas, e fazer o colega sumir com uma tarefa que PONTUA seria
-    roubar pontos do jogador por ter delegado -- o contrario do que a mecanica promete.
-    """
-    x0, x1 = faixa
-    return [i for i, t in enumerate(TAREFAS) if x0 <= t[0] <= x1 and t[2] == 3]
-
 
 def travessias() -> list[tuple[str, float, float, float, float]]:
     return [
@@ -477,21 +449,6 @@ def validar() -> None:
                 problemas.append(
                     "%s: o colega em x=%d cai fora da bandeja (%d..%d)"
                     % (c["nome"], c["x"], i * T, f * T))
-
-        # 3b. Quem assume distracoes tem que assumir distracoes de verdade, e todas
-        #     ADIANTE da bandeja: tirar do corredor uma Q4 que o jogador ja passou nao
-        #     lhe entrega nada, e o efeito da delegacao ficaria invisivel.
-        if c["assume"] is not None:
-            x0, x1 = c["assume"]
-            pegas = q4_da_faixa(c["assume"])
-            if len(pegas) != 2:
-                problemas.append(
-                    "%s: a faixa %d..%d tem %d Q4, e o design pede exatamente duas"
-                    % (c["nome"], x0, x1, len(pegas)))
-            if any(TAREFAS[i][0] <= x_bandeja for i in pegas):
-                problemas.append(
-                    "%s: assume distracao atras da bandeja (x=%d) -- o jogador ja passou "
-                    "por ela e a delegacao nao lhe entrega nada" % (c["nome"], x_bandeja))
 
     # 4. Toda tarefa balanca. E a trava da mecanica de classificacao: se alguma ficar
     #    parada enquanto as outras se mexem, o movimento volta a entregar a resposta.
@@ -892,6 +849,52 @@ def blocos_do_mezanino() -> list[tuple[int, int]]:
     return blocos
 
 
+# Camadas que uma pessoa pinta a mao no editor. O gerador as recalcula a partir dos dados
+# aqui de cima, entao regravar a cena apagaria qualquer ajuste feito no Godot. Elas sao
+# copiadas da cena que ja esta em disco, a menos que se peca --repintar.
+CAMADAS_PINTADAS = ("Decoracao", "Objetos", "Piso")
+
+_BLOCO = r'\[node name="%s" type="TileMapLayer".*?(?=\n\[node |\Z)'
+_DADOS = r'tile_map_data = PackedByteArray\("([^"]*)"\)'
+
+
+def _dados_da_camada(texto, nome):
+    bloco = re.search(_BLOCO % re.escape(nome), texto, re.S)
+    if bloco is None:
+        return None
+    dados = re.search(_DADOS, bloco.group(0))
+    return dados.group(1) if dados else None
+
+
+def _trocar_dados(texto, nome, dados):
+    def troca(m):
+        return re.sub(r'(tile_map_data = PackedByteArray\(")[^"]*("\))',
+                      lambda n: n.group(1) + dados + n.group(2), m.group(0), count=1)
+
+    return re.sub(_BLOCO % re.escape(nome), troca, texto, count=1, flags=re.S)
+
+
+def preservar_pintura(texto, repintar):
+    """Mantem o desenho de tile que ja estiver na cena em disco."""
+    if repintar or not os.path.exists(DESTINO):
+        return texto
+    with open(DESTINO, encoding="utf-8") as f:
+        antigo = f.read()
+    for nome in CAMADAS_PINTADAS:
+        em_disco = _dados_da_camada(antigo, nome)
+        if em_disco is None or em_disco == _dados_da_camada(texto, nome):
+            continue
+        texto = _trocar_dados(texto, nome, em_disco)
+        print("  mantida a pintura da camada %s (--repintar descarta)" % nome)
+    return texto
+
+
+def guardar_copia():
+    """Copia a cena atual para .anterior antes de sobrescrever."""
+    if os.path.exists(DESTINO):
+        shutil.copyfile(DESTINO, DESTINO + ".anterior")
+
+
 def main() -> None:
     validar()
 
@@ -1084,10 +1087,6 @@ def main() -> None:
         if c["corpo"]:
             a('corpo = NodePath("../../Colisores/%s")\n' % c["corpo"])
             a('visual = NodePath("../../EscadaTiles")\n')
-        if c["assume"] is not None:
-            alvos = ", ".join('NodePath("../../Tarefas/Tarefa%02d")' % j
-                              for j in q4_da_faixa(c["assume"]))
-            a("tarefas_assumidas = Array[NodePath]([%s])\n" % alvos)
         a("\n")
 
     a('[node name="Colegas" type="Node2D" parent="."]\n\n')
@@ -1122,7 +1121,9 @@ def main() -> None:
     # esta em (0,-12) com 22px de altura (entities/prazo.tscn), ou seja, os pes ficam em
     # origem-1. Para os pes encostarem no piso (topo y=176) a origem precisa ser 177 --
     # nao 176, e muito menos a linha do piso.
-    a("position = Vector2(-40, %d)\n\n" % (LINHA_PISO * T + 1))
+    # x=8: o urso abre a fase colado no calcanhar do jogador (que nasce em x=48), e
+    # nao entrando em quadro depois.
+    a("position = Vector2(8, %d)\n\n" % (LINHA_PISO * T + 1))
 
     a('[node name="Saida" parent="." instance=ExtResource("cena_saida")]\n')
     a("position = Vector2(%d, %d)\n\n" % SAIDA)
@@ -1138,6 +1139,8 @@ def main() -> None:
     passos = texto.count("[ext_resource") + texto.count("[sub_resource") + 1
     texto = texto.replace("load_steps=0", "load_steps=%d" % passos, 1)
 
+    texto = preservar_pintura(texto, "--repintar" in sys.argv)
+    guardar_copia()
     with open(DESTINO, "w", encoding="utf-8", newline="\n") as f:
         f.write(texto)
 

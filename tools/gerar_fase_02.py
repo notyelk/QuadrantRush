@@ -22,6 +22,9 @@ Vocabulario de tile:
 from __future__ import annotations
 
 import base64
+import re
+import shutil
+import sys
 import os
 import struct
 
@@ -85,7 +88,6 @@ PLATAFORMAS = [
 
 # As duas estruturas que so existem depois de delegar. Nascem SEM colisao e quase
 # transparentes; o colega despachado as materializa (ver scripts/alvo_delegado.gd).
-PONTE = (88, 91, 11)          # tapa o primeiro vao, na altura do piso
 ESCADA = (117, 121, 8)        # degrau de acesso ao alto do arquivo (y=128)
 
 # Coluna inicial de cada bloco de janela (4 colunas de largura). Nenhuma pode cair sobre
@@ -131,11 +133,6 @@ VELOCIDADE_COLEGA = 140.0
 DIANTEIRA_COLEGA = 1.0
 
 COLEGAS = [
-    {
-        "bifurcacao": 0, "x": 962, "y": 112, "nome": "PonteDoVao",
-        "alvo_x": 1400, "tipo": "perto", "corpo": "Ponte", "visual": "PonteTiles",
-        "mensagem": "O colega estendeu a passarela sobre o vão",
-    },
     {
         "bifurcacao": 1, "x": 1186, "y": 112, "nome": "EscadaDoArquivo",
         "alvo_x": 1904, "tipo": "longe", "corpo": "Escada", "visual": "EscadaTiles",
@@ -295,7 +292,7 @@ def validar() -> None:
     linhas_janela = set(range(JANELA_LINHA0, JANELA_LINHA0 + JANELA_LINHAS))
     for base in JANELAS:
         cols_janela = set(range(base, base + JANELA_COLS))
-        for inicio, fim, linha in PLATAFORMAS + [PONTE, ESCADA]:
+        for inicio, fim, linha in PLATAFORMAS + [ESCADA]:
             if linha in linhas_janela and cols_janela & set(range(inicio, fim)):
                 problemas.append(
                     "janela na coluna %d e cortada pela plataforma %d-%d (linha %d)"
@@ -452,18 +449,12 @@ def validar() -> None:
                 problemas.append("movel '%s' na coluna %d flutua sobre o vao"
                                  % (tipo, col + dc))
 
-    # 9. As estruturas delegaveis nao podem estar no caminho obrigatorio. A ponte tapa um
-    #    vao que ja e pulavel e a escada leva a um bonus -- nenhuma das duas pode ser
-    #    necessaria para terminar o dia, senao quem resolver a Q3 em vez de delegar ficaria
-    #    preso, e resolver e uma resposta legitima do Quadro 1.
-    for nome, estrutura in [("Ponte", PONTE), ("Escada", ESCADA)]:
-        inicio, fim, linha = estrutura
-        if nome == "Ponte":
-            largura = (fim - inicio) * T
-            if largura > alcance(0.0):
-                problemas.append(
-                    "sem a ponte o vao de %dpx fica impossivel: delegar viraria "
-                    "obrigatorio" % largura)
+    # 9. A escada delegavel nao pode estar no caminho obrigatorio: ela leva a um bonus,
+    #    e quem resolver a Q3 em vez de delegar tem de conseguir terminar o dia --
+    #    resolver e uma resposta legitima do Quadro 1.
+    inicio, fim, _linha = ESCADA
+    if fim * T >= SAIDA[0]:
+        problemas.append("a escada delegavel alcanca a saida: delegar viraria obrigatorio")
 
     if problemas:
         print("VALIDACAO FALHOU:")
@@ -554,13 +545,58 @@ def escapar(texto: str) -> str:
     return texto.replace('"', '\\"')
 
 
+# Camadas que uma pessoa pinta a mao no editor. O gerador as recalcula a partir dos dados
+# aqui de cima, entao regravar a cena apagaria qualquer ajuste feito no Godot. Elas sao
+# copiadas da cena que ja esta em disco, a menos que se peca --repintar.
+CAMADAS_PINTADAS = ("Decoracao", "Objetos", "Piso")
+
+_BLOCO = r'\[node name="%s" type="TileMapLayer".*?(?=\n\[node |\Z)'
+_DADOS = r'tile_map_data = PackedByteArray\("([^"]*)"\)'
+
+
+def _dados_da_camada(texto, nome):
+    bloco = re.search(_BLOCO % re.escape(nome), texto, re.S)
+    if bloco is None:
+        return None
+    dados = re.search(_DADOS, bloco.group(0))
+    return dados.group(1) if dados else None
+
+
+def _trocar_dados(texto, nome, dados):
+    def troca(m):
+        return re.sub(r'(tile_map_data = PackedByteArray\(")[^"]*("\))',
+                      lambda n: n.group(1) + dados + n.group(2), m.group(0), count=1)
+
+    return re.sub(_BLOCO % re.escape(nome), troca, texto, count=1, flags=re.S)
+
+
+def preservar_pintura(texto, repintar):
+    """Mantem o desenho de tile que ja estiver na cena em disco."""
+    if repintar or not os.path.exists(DESTINO):
+        return texto
+    with open(DESTINO, encoding="utf-8") as f:
+        antigo = f.read()
+    for nome in CAMADAS_PINTADAS:
+        em_disco = _dados_da_camada(antigo, nome)
+        if em_disco is None or em_disco == _dados_da_camada(texto, nome):
+            continue
+        texto = _trocar_dados(texto, nome, em_disco)
+        print("  mantida a pintura da camada %s (--repintar descarta)" % nome)
+    return texto
+
+
+def guardar_copia():
+    """Copia a cena atual para .anterior antes de sobrescrever."""
+    if os.path.exists(DESTINO):
+        shutil.copyfile(DESTINO, DESTINO + ".anterior")
+
+
 def main() -> None:
     validar()
 
     piso = celulas_para_dados(camada_piso())
     decoracao = celulas_para_dados(camada_decoracao())
     objetos = celulas_para_dados(camada_objetos())
-    ponte_tiles = celulas_para_dados(camada_de(PONTE))
     escada_tiles = celulas_para_dados(camada_de(ESCADA))
 
     formas: dict[tuple[int, int], str] = {}
@@ -580,8 +616,8 @@ def main() -> None:
         largura = (fim - inicio) * T
         cx = inicio * T + largura // 2
         colisores.append(("Plataforma%d" % i, cx, linha * T + 8, forma(largura, 16), True))
-    # As duas delegaveis nascem DESLIGADAS: o colega e quem liga a colisao.
-    for nome, (inicio, fim, linha) in [("Ponte", PONTE), ("Escada", ESCADA)]:
+    # A escada delegavel nasce DESLIGADA: o colega e quem liga a colisao.
+    for nome, (inicio, fim, linha) in [("Escada", ESCADA)]:
         largura = (fim - inicio) * T
         cx = inicio * T + largura // 2
         colisores.append((nome, cx, linha * T + 8, forma(largura, 16), False))
@@ -673,10 +709,10 @@ def main() -> None:
         a('tile_map_data = PackedByteArray("%s")\n' % dados)
         a('tile_set = ExtResource("tileset")\n\n')
 
-    # As duas estruturas delegaveis, em camadas proprias e quase transparentes: elas
-    # PRECISAM ser visiveis antes de existirem, senao delegar parece nao ter feito nada e
-    # o jogador nunca liga a acao ao efeito.
-    for nome, dados in [("PonteTiles", ponte_tiles), ("EscadaTiles", escada_tiles)]:
+    # A estrutura delegavel, em camada propria e quase transparente: ela PRECISA ser
+    # visivel antes de existir, senao delegar parece nao ter feito nada e o jogador
+    # nunca liga a acao ao efeito.
+    for nome, dados in [("EscadaTiles", escada_tiles)]:
         a('[node name="%s" type="TileMapLayer" parent="."]\n' % nome)
         a("z_index = -1\nmodulate = Color(1, 1, 1, 0.22)\n")
         a('tile_map_data = PackedByteArray("%s")\n' % dados)
@@ -725,7 +761,10 @@ def main() -> None:
         a('[node name="Q3%s" parent="Bifurcacoes" instance=ExtResource("cena_q3")]\n' % "ab"[i])
         a("position = Vector2(%d, %d)\n" % (x, LINHA_PISO * T))
         a('texto = "%s"\n' % escapar(texto))
-        a('colega = NodePath("../../Colegas/Colega%d")\n\n' % i)
+        colega = [j for j, c in enumerate(COLEGAS) if c["bifurcacao"] == i]
+        if colega:
+            a('colega = NodePath("../../Colegas/Colega%d")\n' % colega[0])
+        a("\n")
 
     a('[node name="Delegacoes" type="Node2D" parent="."]\n\n')
     for c in COLEGAS:
@@ -769,6 +808,8 @@ def main() -> None:
     passos = texto.count("[ext_resource") + texto.count("[sub_resource") + 1
     texto = texto.replace("load_steps=0", "load_steps=%d" % passos, 1)
 
+    texto = preservar_pintura(texto, "--repintar" in sys.argv)
+    guardar_copia()
     with open(DESTINO, "w", encoding="utf-8", newline="\n") as f:
         f.write(texto)
 

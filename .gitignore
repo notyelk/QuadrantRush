@@ -29,3 +29,4 @@ __pycache__/
 
 # Documentos internos do TCC (dados pessoais)
 docs/
+*.tscn.anterior

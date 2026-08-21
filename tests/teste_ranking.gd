@@ -32,6 +32,7 @@ var falhas := 0
 
 func _ready() -> void:
 	SupabaseClient.caminho_local = CAMINHO_TESTE
+	Perfil.caminho = "user://teste_perfil.cfg"
 	_limpar()
 
 	_cenario_payload()

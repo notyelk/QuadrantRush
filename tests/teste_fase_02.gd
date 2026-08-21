@@ -42,7 +42,11 @@ var falhas := 0
 func _ready() -> void:
 	# Ver a nota em teste_fase_01.gd: a tela de resultado grava no ranking local, e o
 	# teste não pode sujar o histórico real de quem joga nesta máquina.
+	# Um cenario que abre a tela de resultado envia a partida: sem nuvem e com perfil
+	# descartavel, medir nao chega ao ranking nem ao perfil de quem joga nesta maquina.
 	SupabaseClient.caminho_local = "user://teste_ranking.cfg"
+	SupabaseClient.supabase_url = ""
+	Perfil.caminho = "user://teste_perfil.cfg"
 
 	await _cenario_agenda_deterministica()
 	await _cenario_ideal()
@@ -598,7 +602,7 @@ func _crise_com_texto(fase: Node2D, texto: String) -> Node2D:
 ## pela primeira vez tem que passar pela fase que ensina a mecânica.
 func _cenario_progressao() -> void:
 	print("\n--- cenário 9: o segundo dia se abre com a vitória ---")
-	DirAccess.remove_absolute(ProjectSettings.globalize_path(Perfil.CAMINHO))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(Perfil.caminho))
 	Perfil.carregar()
 
 	_conferir("perfil novo começa no Dia 1", Perfil.dia_liberado, 1)
@@ -622,7 +626,7 @@ func _cenario_progressao() -> void:
 		_conferir("cena do dia %d existe" % numero,
 			ResourceLoader.exists(GameManager.CENA_DO_DIA[numero]), true)
 
-	DirAccess.remove_absolute(ProjectSettings.globalize_path(Perfil.CAMINHO))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(Perfil.caminho))
 
 
 func _recarregar_dia() -> int:

@@ -32,6 +32,12 @@ var falhas := 0
 
 
 func _ready() -> void:
+	# Um cenario que abre a tela de resultado envia a partida: sem nuvem e com perfil
+	# descartavel, medir nao chega ao ranking nem ao perfil de quem joga nesta maquina.
+	SupabaseClient.caminho_local = "user://teste_ranking.cfg"
+	SupabaseClient.supabase_url = ""
+	Perfil.caminho = "user://teste_perfil.cfg"
+
 	_cenario_sorteio()
 	_cenario_quadro_1()
 	_cenario_mapeamento()

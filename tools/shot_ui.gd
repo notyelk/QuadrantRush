@@ -23,11 +23,10 @@ func _ready() -> void:
 	# O ranking é lido de um arquivo descartável para que fotografar não misture partidas
 	# de mentira no histórico real de quem estiver jogando nesta máquina.
 	SupabaseClient.caminho_local = "user://shots_ranking.cfg"
+	Perfil.caminho = "user://shots_perfil.cfg"
 
-	# A tela de resultado envia a partida ao abrir. São quatro telas de resultado aqui, e
-	# com a nuvem ligada cada rodada de fotos gravaria quatro partidas de mentira no
-	# ranking de verdade. Ela volta a valer na hora de fotografar o próprio ranking, que é
-	# só leitura.
+	# As quatro telas de resultado enviam a partida ao abrir. A nuvem volta a valer na hora
+	# de fotografar o proprio ranking, que e so leitura.
 	_nuvem = SupabaseClient.supabase_url
 	SupabaseClient.supabase_url = ""
 

@@ -40,6 +40,8 @@ func _ready() -> void:
 	# Ver a nota nos testes: a tela de resultado grava no ranking local, e medir não pode
 	# encher o histórico de quem joga nesta máquina.
 	SupabaseClient.caminho_local = "user://metricas_ranking.cfg"
+	SupabaseClient.supabase_url = ""
+	Perfil.caminho = "user://metricas_perfil.cfg"
 	Perfil.nickname = "robo"
 
 	for fase in FASES:

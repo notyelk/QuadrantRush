@@ -79,6 +79,7 @@ func _ready() -> void:
 	# Partida de robo nao entra no ranking de ninguem.
 	SupabaseClient.supabase_url = ""
 	SupabaseClient.caminho_local = "user://playtest_ranking.cfg"
+	Perfil.caminho = "user://playtest_perfil.cfg"
 	Perfil.nickname = "simulacao"
 
 	var partidas := PARTIDAS_PADRAO

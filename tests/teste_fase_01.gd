@@ -35,7 +35,11 @@ func _ready() -> void:
 	# Os percursos chegam ao fim da fase, e a tela de resultado grava a partida no ranking
 	# local (Etapa 7). Sem este desvio, rodar a suíte encheria de partidas de robô o
 	# histórico de quem estiver jogando nesta máquina.
+	# Um cenario que abre a tela de resultado envia a partida: sem nuvem e com perfil
+	# descartavel, medir nao chega ao ranking nem ao perfil de quem joga nesta maquina.
 	SupabaseClient.caminho_local = "user://teste_ranking.cfg"
+	SupabaseClient.supabase_url = ""
+	Perfil.caminho = "user://teste_perfil.cfg"
 
 	await _cenario_ideal()
 	await _cenario_apressado()
@@ -1008,7 +1012,7 @@ func _cenario_perfil() -> void:
 	_conferir("carregar devolve o gravado", Perfil.carregar(), "Teste")
 
 	# Perfil ausente não pode impedir o jogo de abrir.
-	DirAccess.remove_absolute(ProjectSettings.globalize_path(Perfil.CAMINHO))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(Perfil.caminho))
 	_conferir("sem arquivo devolve vazio", Perfil.carregar(), "")
 
 

@@ -18,7 +18,9 @@ extends Node
 const MINIMO := 2
 const MAXIMO := 16
 
-const CAMINHO := "user://perfil.cfg"
+# Var, e nao const: teste e ferramenta apontam para arquivo descartavel, senao medir
+# apagaria o perfil de quem joga nesta maquina.
+var caminho := "user://perfil.cfg"
 
 ## Quantos dias de expediente já foram liberados. Começa em 1 (só a Fase 1); vencer o
 ## Dia 1 libera o Dia 2. Mora aqui, e não no GameManager, pela mesma razão do nickname:
@@ -74,7 +76,7 @@ func salvar() -> void:
 	var arquivo := ConfigFile.new()
 	arquivo.set_value("jogador", "nickname", nickname)
 	arquivo.set_value("jogador", "dia_liberado", dia_liberado)
-	arquivo.save(CAMINHO)
+	arquivo.save(caminho)
 
 
 ## ConfigFile em vez de JSON: é da própria engine, sobrevive ao export WebGL (onde
@@ -87,7 +89,7 @@ func carregar() -> String:
 	nickname = ""
 	dia_liberado = PRIMEIRO_DIA
 	var arquivo := ConfigFile.new()
-	if arquivo.load(CAMINHO) != OK:
+	if arquivo.load(caminho) != OK:
 		return nickname
 	nickname = validar(str(arquivo.get_value("jogador", "nickname", "")))
 	dia_liberado = clampi(

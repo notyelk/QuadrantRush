@@ -115,8 +115,7 @@ func _ao_delegar(corpo: Node2D) -> void:
 		return
 	_decidir(GameManager.Acao.DELEGAR, ponto_delegar.global_position)
 	# Depois de _decidir(), e não antes: o colega só sai da bandeja se a delegação
-	# realmente contou. Antes, um retorno cedo lá dentro deixaria um colega andando por
-	# uma tarefa que não pontuou.
+	# realmente contou.
 	var ajudante := get_node_or_null(colega)
 	if ajudante != null and ajudante.has_method("despachar"):
 		ajudante.despachar()

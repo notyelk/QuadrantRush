@@ -52,6 +52,7 @@ func _ready() -> void:
 	await _cenario_percurso_a_pe()
 	await _cenario_maturacao()
 	await _cenario_q2_fora_da_linha_de_corrida()
+	await _cenario_urgentes_ao_alcance()
 	_cenario_progressao()
 
 	print("\n=====  %s  =====" % ("FALHOU (%d)" % falhas if falhas else "TODOS OS TESTES OK"))
@@ -338,28 +339,22 @@ func _cenario_geometria_das_chegadas() -> void:
 	_conferir("tarefas paradas também têm chão", fixas_sem_chao, 0)
 
 	# Os vãos existem mesmo. Um gerador que "esquecesse" de abrir o buraco deixaria o
-	# corredor plano, e a ponte que o colega estende viraria decoração — nada no jogo
-	# denunciaria isso, porque a fase continuaria perfeitamente jogável.
-	var ponte: StaticBody2D = fase.get_node("Colisores/Ponte")
-	var escada: StaticBody2D = fase.get_node("Colisores/Escada")
-	var col_ponte: CollisionShape2D = ponte.get_node("CollisionShape2D")
-	var col_escada: CollisionShape2D = escada.get_node("CollisionShape2D")
+	# corredor plano e a fase continuaria perfeitamente jogável, sem nada denunciar.
+	var vao := Vector2(1432, 150.0)
+	var raio := PhysicsRayQueryParameters2D.create(vao, vao + Vector2(0, 90))
+	_conferir("o corredor tem um vão de verdade", espaco.intersect_ray(raio).is_empty(), true)
 
-	_conferir("a ponte nasce sem colisão", col_ponte.disabled, true)
+	# A escada do arquivo nasce sem colisão e só o colega despachado a materializa. Aciona
+	# o alvo direto, sem ele: o que este cenário prova é o efeito, e o caminho do colega
+	# até lá tem cenário próprio na Fase 1.
+	var escada: StaticBody2D = fase.get_node("Colisores/Escada")
+	var col_escada: CollisionShape2D = escada.get_node("CollisionShape2D")
 	_conferir("a escada do arquivo nasce sem colisão", col_escada.disabled, true)
 
-	var sobre_o_vao := Vector2(ponte.global_position.x, 150.0)
-	var raio := PhysicsRayQueryParameters2D.create(sobre_o_vao, sobre_o_vao + Vector2(0, 90))
-	_conferir("e existe mesmo um buraco embaixo dela",
-		espaco.intersect_ray(raio).is_empty(), true)
-
-	# Delegar materializa a ponte. Aciona o alvo direto, sem o colega: o que este cenário
-	# prova é o efeito, e o caminho do colega até lá tem cenário próprio na Fase 1.
-	fase.get_node("Delegacoes/PonteDoVao").acionar()
+	fase.get_node("Delegacoes/EscadaDoArquivo").acionar()
 	await get_tree().physics_frame
 	await get_tree().physics_frame
-	_conferir("depois de delegar, a ponte fica sólida", col_ponte.disabled, false)
-	_conferir("mas a escada continua onde estava", col_escada.disabled, true)
+	_conferir("depois de delegar, a escada fica sólida", col_escada.disabled, false)
 
 	await _fechar_fase(fase)
 
@@ -549,6 +544,49 @@ func _cenario_q2_fora_da_linha_de_corrida() -> void:
 ## A tarefa cujo enunciado é o texto da crise. Buscar pelo TEXTO, e não pela posição:
 ## reescrever o enunciado é metade da mecânica, e assim o cenário falha se isso parar de
 ## acontecer.
+## Chegar ao elevador trancado encerra o dia, mas aqui as urgentes CAEM: o que ainda vai
+## chegar e o que está a caminho de amadurecer contam como ao alcance.
+##
+## Sem essa soma, esbarrar na porta cedo encerraria a partida por urgentes que ainda nem
+## tinham existido — e nenhum teste de comportamento veria isso, porque o percurso ideal
+## chega ao elevador com a cota já cumprida.
+func _cenario_urgentes_ao_alcance() -> void:
+	print("\n--- cenário 10: o elevador só é definitivo quando não há mais volta ---")
+	var fase := await _abrir_fase()
+	var jogador: CharacterBody2D = fase.get_node("Player")
+	var saida: Node2D = fase.get_node("Saida")
+
+	GameManager.tempo_restante = 400.0
+
+	# Nada chegou ainda: tudo o que a fase promete está na agenda, não na cena.
+	_conferir("no primeiro quadro nada foi coletado", fase._q1_coletadas, 0)
+	_conferir("mas o dia inteiro conta como ao alcance",
+		fase.urgentes_ao_alcance() >= fase.meta_de_urgentes(), true)
+	saida.barrada.emit()
+	_conferir("a porta trancada não encerra o dia aqui", GameManager.em_jogo, true)
+
+	# Uma pendência a caminho de virar crise também é urgente ao alcance: ela ainda vai
+	# nascer, e a cota já subiu por causa dela.
+	var so_da_cena: int = fase.urgentes_ao_alcance()
+	fase._maturando.append({"resta": 99.0, "texto": "crise de teste"})
+	_conferir("pendência a caminho conta como urgente por vir",
+		fase.urgentes_ao_alcance(), so_da_cena + 1)
+	fase._maturando.clear()
+
+	# Corre até o fim sem coletar nada: agora não sobra nada a que voltar.
+	for parada in [400, 900, 1400, 1900, 2400, 2700]:
+		await _reta(jogador, Vector2(parada, 160))
+		await _esperar_pousos(fase, jogador)
+	fase._maturando.clear()
+
+	_conferir("nenhuma urgente sobrou ao alcance", fase.urgentes_ao_alcance(), 0)
+	await _levar(jogador, saida.global_position + Vector2(4, -16))
+	_conferir("chegar ao elevador assim encerra a fase", GameManager.em_jogo, false)
+	_conferir("e encerra como derrota", GameManager.ultima_vitoria, false)
+
+	await _fechar_fase(fase)
+
+
 func _crise_com_texto(fase: Node2D, texto: String) -> Node2D:
 	for t in _tarefas_de(fase):
 		if t.texto == texto:

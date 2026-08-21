@@ -4,7 +4,7 @@
 [ext_resource type="Texture2D" path="res://sprites/PixelOffice/PixelOfficeAssets.png" id="2_icones"]
 
 [sub_resource type="RectangleShape2D" id="Shape_ponto"]
-size = Vector2(36, 44)
+size = Vector2(96, 44)
 
 [sub_resource type="RectangleShape2D" id="Shape_corredor"]
 size = Vector2(28, 40)
@@ -38,14 +38,9 @@ collision_mask = 2
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Proximidade"]
 shape = SubResource("Shape_proximidade")
 
-; O gatilho de RESOLVER cobre y −40..0 (relativo à bifurcação, que fica no piso), e o de
-; DELEGAR cobre −86..−42. Eles NÃO podem se tocar.
-;
-; Este ponto já foi 28x56 em (0,−30), ou seja −58..−2, e o de delegar chega a
-; −42: quem subia na bandeja (corpo de −66 a −48) entrava nos DOIS no mesmo quadro, e o
-; primeiro sinal processado decidia a tarefa. Na prática, subir para delegar registrava
-; RESOLVER na metade das vezes — e o colega ficava sentado, sem nada denunciar o motivo.
-; Quem corre pelo chão tem o corpo em −18..0 e continua sendo pego normalmente.
+; RESOLVER cobre y -40..0 e DELEGAR cobre -86..-42. As duas faixas nao podem se tocar:
+; quem sobe na bandeja entraria nos dois no mesmo quadro e o primeiro sinal processado
+; decidiria a tarefa.
 [node name="PontoResolver" type="Area2D" parent="."]
 position = Vector2(0, -20)
 z_index = 3

@@ -52,6 +52,8 @@ func _ready() -> void:
 	await _cenario_setores()
 	await _cenario_bordas()
 	_cenario_enunciados()
+	await _cenario_urso_no_chao()
+	await _cenario_elevador_sem_volta()
 
 	print("\n=====  %s  =====" % ("FALHOU (%d)" % falhas if falhas else "TODOS OS TESTES OK"))
 	get_tree().quit(1 if falhas else 0)
@@ -854,6 +856,90 @@ func _cenario_enunciados() -> void:
 	_conferir("duas partidas não trazem a mesma ordem", primeira == segunda, false)
 
 
+## O urso acompanha a altura de onde o jogador PISA, e não a origem dele.
+##
+## Ele não tem gravidade nem colisão com o mundo, então a altura dele é sondada por raio:
+## um jogador no ar não o levanta, um degrau ao alcance dele levanta, e sair do degrau o
+## traz de volta ao piso. As três metades são medidas juntas porque satisfazer uma delas
+## sozinha é fácil.
+func _cenario_urso_no_chao() -> void:
+	print("\n--- cenário 16: o urso persegue pelo piso, não pelo arco do pulo ---")
+	var fase := await _abrir_fase(true)
+	var urso: Node2D = fase.get_node("Inimigos/Prazo")
+	var jogador: CharacterBody2D = fase.get_node("Player")
+
+	jogador.global_position = Vector2(900, 160)
+	await _esperar_ate(func() -> bool: return urso.estado != urso.Estado.DORMINDO, 400)
+	await _esperar_ate(
+		func() -> bool: return absf(urso.global_position.y - urso.chao_y) < 1.0, 300)
+
+	var y_no_chao: float = urso.global_position.y
+	_conferir("assenta na altura do piso", absf(y_no_chao - urso.chao_y) < 1.0, true)
+
+	# Jogador suspenso no ar, sem chão sob os pés, por bem mais tempo do que o urso
+	# levaria para vencer os 64px que separam o piso do teto de subida.
+	var subiu := 0.0
+	for _i in 90:
+		jogador.global_position = Vector2(900, 90)
+		jogador.velocity = Vector2.ZERO
+		await get_tree().physics_frame
+		subiu = maxf(subiu, y_no_chao - urso.global_position.y)
+	_conferir("não sobe atrás de quem está no ar", subiu < 2.0, true)
+
+	# E a outra metade: pisar num degrau ao alcance dele continua levando o urso junto.
+	var plataforma := _degrau_estatico(fase, "Colisores/Plataforma1")
+	var topo: float = plataforma["topo"]
+	jogador.global_position = Vector2(896, topo - 16.0)
+	urso.global_position.x = 896.0
+	await _esperar_ate(func() -> bool: return jogador.is_on_floor(), 60)
+	await _esperar_ate(func() -> bool: return urso.global_position.y < topo + 4.0, 180)
+
+	_conferir("sobe atrás de quem pisa na plataforma",
+		urso.global_position.y < y_no_chao - 20.0, true)
+	# E a altura em que ele para é a de uma superfície de verdade, não um valor solto.
+	_conferir("pousa sobre a plataforma", absf(urso.global_position.y - (topo + 1.0)) < 2.0, true)
+
+	# Voltar ao piso traz o urso junto, mesmo com a plataforma ainda sobre a cabeça dele.
+	jogador.global_position = Vector2(900, 160)
+	jogador.velocity = Vector2.ZERO
+	await _esperar_ate(
+		func() -> bool: return absf(urso.global_position.y - urso.chao_y) < 1.0, 300)
+	_conferir("desce de volta quando o jogador volta ao piso",
+		absf(urso.global_position.y - urso.chao_y) < 1.0, true)
+
+	await _fechar_fase(fase)
+
+
+## Chegar ao elevador com urgente perdida encerra o dia em derrota.
+##
+## Uma tarefa deixada para trás desliga o próprio colisor: não há como voltar a ela, e o
+## elevador nunca mais abriria. Insistir na porta trancada até o relógio zerar não ensina
+## nada que a derrota agora já não ensine.
+func _cenario_elevador_sem_volta() -> void:
+	print("\n--- cenário 17: o elevador não perdoa urgente para trás ---")
+	var fase := await _abrir_fase()
+	var jogador: CharacterBody2D = fase.get_node("Player")
+	var saida: Node2D = fase.get_node("Saida")
+
+	# Com todas as urgentes ainda no corredor, esbarrar na porta é só aviso.
+	_conferir("todas as urgentes ao alcance no início",
+		fase.urgentes_ao_alcance(), fase.meta_de_urgentes())
+	saida.barrada.emit()
+	_conferir("porta trancada não encerra o dia enquanto há volta", GameManager.em_jogo, true)
+
+	# Rota baixa até o fim: as urgentes do alto ficam para trás e se registram sozinhas.
+	GameManager.tempo_restante = 600.0
+	await _reta(jogador, Vector2(3000, 160))
+	_conferir("nenhuma urgente sobrou ao alcance", fase.urgentes_ao_alcance(), 0)
+	_conferir("e o elevador continua trancado", saida.liberada, false)
+
+	await _levar(jogador, saida.global_position + Vector2(4, -16))
+	_conferir("chegar ao elevador assim encerra a fase", GameManager.em_jogo, false)
+	_conferir("e encerra como derrota", GameManager.ultima_vitoria, false)
+
+	await _fechar_fase(fase)
+
+
 func _abrir_fase(com_prazo: bool = false) -> Node2D:
 	var fase: Node2D = CENA_FASE.instantiate()
 	add_child(fase)
@@ -950,8 +1036,9 @@ func _cenario_colega() -> void:
 	var jogador: CharacterBody2D = fase.get_node("Player")
 
 	var colegas := fase.get_node("Colegas").get_children()
-	_conferir("um colega por bifurcação Q3", colegas.size(),
-		fase.get_node("Bifurcacoes").get_child_count())
+	# Um colega só na fase, e ele é o que muda a geometria: delegar a Q3 do arquivo
+	# baixa a escada da última Q2.
+	_conferir("a fase tem um colega", colegas.size(), 1)
 
 	var escada: StaticBody2D = fase.get_node("Colisores/EscadaDelegada")
 	var colisor_escada: CollisionShape2D = escada.get_node("CollisionShape2D")
@@ -1012,8 +1099,8 @@ func _cenario_colega() -> void:
 		sobreposicao >= 8.0, true)
 
 	var folga_x := minf(
-		colegas[2].global_position.x - (gatilho.global_position.x - meia.x),
-		(gatilho.global_position.x + meia.x) - colegas[2].global_position.x)
+		colegas[0].global_position.x - (gatilho.global_position.x - meia.x),
+		(gatilho.global_position.x + meia.x) - colegas[0].global_position.x)
 	_conferir("e o colega fica dentro do gatilho, com folga", folga_x >= 8.0, true)
 
 	# Os dois gatilhos da Q3 não podem se tocar.
@@ -1035,13 +1122,17 @@ func _cenario_colega() -> void:
 		resolver.global_position.y + meia_r >= 176.0
 		and resolver.global_position.y - meia_r <= 158.0, true)
 
-	# Agora o comportamento, chegando PELA LATERAL. Descer em cima do gatilho o dispara no
-	# ar, o que provaria só que o pulo funciona.
+	# O gatilho tem de cobrir a bandeja inteira, e não só o metro quadrado do colega: quem
+	# pousa numa ponta e segue andando passa por cima dele sem que nada aconteça.
+	_conferir("o gatilho cobre a bandeja de ponta a ponta",
+		gatilho.global_position.x - meia.x <= tabua["esquerda"]
+		and gatilho.global_position.x + meia.x >= tabua["direita"], true)
+
+	# E o comportamento, chegando PELA LATERAL. Descer em cima do gatilho o dispara no ar,
+	# o que provaria só que o pulo funciona.
 	await _levar(jogador, Vector2(tabua["esquerda"] + 8.0, tabua["topo"] - 16.0))
-	_conferir("pousar na ponta da bandeja ainda não delega",
-		colegas[2].esta_a_caminho(), false)
-	await _reta(jogador, Vector2(colegas[2].global_position.x, tabua["topo"] - 16.0))
-	_conferir("andar até o colega delega", colegas[2].esta_a_caminho(), true)
+	await _reta(jogador, Vector2(colegas[0].global_position.x, tabua["topo"] - 16.0))
+	_conferir("andar pela bandeja delega", colegas[0].esta_a_caminho(), true)
 
 	var alvo: Node2D = fase.get_node("Delegacoes/EscadaDelegada")
 	_conferir("e o alvo ainda não abriu", alvo.esta_aberto(), false)
@@ -1050,29 +1141,8 @@ func _cenario_colega() -> void:
 	# folga de sobra; esperar por condição, e não por contagem fixa, evita que a suíte
 	# fique refém da taxa de quadros da máquina.
 	await _esperar_ate(func() -> bool: return alvo.esta_aberto(), 300)
-	_conferir("o colega chegou ao alvo", colegas[2].ja_chegou(), true)
+	_conferir("o colega chegou ao alvo", colegas[0].ja_chegou(), true)
 	_conferir("e a escada do arquivo ficou sólida", colisor_escada.disabled, false)
-
-	# --- assumir uma distração é EVITOU, não pontuação nova ---
-	var evitou_antes: int = GameManager.acoes_por_tipo[GameManager.Acao.EVITOU]
-	var ignorou_antes: int = GameManager.acoes_por_tipo[GameManager.Acao.IGNOROU]
-	var pontos_antes := GameManager.pontuacao_total
-	var reuniao: Node2D = fase.get_node("Delegacoes/ReuniaoAssumida")
-	var assumidas: int = reuniao.tarefas_assumidas.size()
-	_conferir("a reunião assumida tira duas distrações", assumidas, 2)
-
-	reuniao.acionar()
-	await get_tree().physics_frame
-	await get_tree().physics_frame
-	_conferir("as distrações assumidas contam como evitadas",
-		GameManager.acoes_por_tipo[GameManager.Acao.EVITOU], evitou_antes + assumidas)
-	_conferir("e não valem ponto nenhum", GameManager.pontuacao_total, pontos_antes)
-	# Comparação com o ANTES, e não com zero: o robô chegou aqui teleportado até o fim do
-	# corredor, então já deixou tarefas para trás por conta própria. O que precisa ser
-	# verdade é que assumir não transforma nenhuma delas em "deixou passar" — seria o
-	# colega estragando a nota de quem delegou.
-	_conferir("assumir não gera 'deixou passar'",
-		GameManager.acoes_por_tipo[GameManager.Acao.IGNOROU], ignorou_antes)
 
 	# --- a conta dos 630px, sobre os nós reais ---
 	#
@@ -1082,9 +1152,9 @@ func _cenario_colega() -> void:
 	# é por isso que precisa de asserção: uma mudança inocente de posição inverteria o
 	# papel de um alvo sem quebrar nada visível.
 	var limite := 1.0 * 140.0 * 180.0 / (180.0 - 140.0)
-	var esperado := {"CorredorAssumido": false, "ReuniaoAssumida": true, "EscadaDelegada": true}
+	var esperado := {"EscadaDelegada": true}
 	for i in colegas.size():
-		var bandeja: Node2D = fase.get_node("Bifurcacoes").get_child(i)
+		var bandeja: Node2D = fase.get_node("Bifurcacoes/Q3c")
 		var destino: Node2D = colegas[i].get_node(colegas[i].alvo)
 		var d: float = absf(destino.global_position.x - bandeja.global_position.x)
 		_conferir("%s: paga sem desvio" % destino.name, d < limite, esperado[destino.name])

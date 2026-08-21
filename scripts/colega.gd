@@ -30,6 +30,15 @@ extends Node2D
 const DURACAO_DESCIDA := 0.4
 const DISTANCIA_DESCIDA := 14.0
 
+## Sonda de chão: de quanto em quanto o percurso é medido, até onde ela procura para
+## baixo, e o maior vão que ele pula. Ele não tem corpo físico, então sem isso atravessa
+## um buraco do corredor caminhando no ar.
+const PASSO_DA_SONDA := 8.0
+const ALCANCE_DA_SONDA := 220.0
+const MAIOR_VAO := 160.0
+const ALTURA_DO_PULO := 22.0
+const CAMADA_DO_MUNDO := 1
+
 enum Estado { SENTADO, DESCENDO, ANDANDO, CHEGOU }
 
 @onready var anim: AnimatedSprite2D = $AnimatedSprite2D
@@ -40,6 +49,10 @@ var _origem := Vector2.ZERO
 var _destino := Vector2.ZERO
 var _rumo := 1.0
 var _tempo := 0.0
+## Bordas do vão que ele está atravessando: x e y de onde saiu e de onde vai cair.
+## _vao_de.x < 0 significa que ele está em terra firme.
+var _vao_de := Vector2(-1.0, 0.0)
+var _vao_para := Vector2(-1.0, 0.0)
 
 
 func _ready() -> void:
@@ -76,12 +89,14 @@ func despachar() -> void:
 	Audio.tocar("delegar")
 
 
-## A Q3 dele foi resolvida no chão: ele apaga, para deixar de parecer um convite.
+## A Q3 dele foi resolvida no chão: ele sai de cena. Deixá-lo desbotado na bandeja é o
+## mesmo que deixar um convite que não responde a nada.
 func dispensar() -> void:
 	if estado != Estado.SENTADO:
 		return
 	var apagar := create_tween()
-	apagar.tween_property(self, "modulate:a", 0.35, 0.3)
+	apagar.tween_property(self, "modulate:a", 0.0, 0.3)
+	apagar.tween_callback(hide)
 
 
 func esta_a_caminho() -> bool:
@@ -120,6 +135,7 @@ func _descer(delta: float) -> void:
 
 func _andar(delta: float) -> void:
 	global_position.x = move_toward(global_position.x, _destino.x, velocidade * delta)
+	_acompanhar_o_chao()
 	if not is_equal_approx(global_position.x, _destino.x):
 		return
 
@@ -131,3 +147,50 @@ func _andar(delta: float) -> void:
 	var no := get_node_or_null(alvo)
 	if no != null and no.has_method("acionar"):
 		no.acionar()
+
+
+## Mantém o colega em cima do piso que existe, e o faz saltar os vãos em vez de caminhar
+## sobre eles. A altura vem sempre de uma superfície real; sem isso o corredor do Dia 2,
+## que tem dois buracos entre a bandeja e o alvo, o mostraria pisando no ar.
+func _acompanhar_o_chao() -> void:
+	var aqui := _chao_em(global_position.x)
+	if aqui < INF:
+		_vao_de.x = -1.0
+		global_position.y = aqui
+		return
+
+	if _vao_de.x < 0.0:
+		_vao_de = Vector2(global_position.x, global_position.y)
+		_vao_para = _outra_margem(global_position.x)
+
+	var largura := _vao_para.x - _vao_de.x
+	if absf(largura) < 1.0:
+		return
+	var t := clampf((global_position.x - _vao_de.x) / largura, 0.0, 1.0)
+	global_position.y = lerpf(_vao_de.y, _vao_para.y, t) - ALTURA_DO_PULO * sin(t * PI)
+
+
+## Altura de caminhada sobre o piso deste x, ou INF se ali não há piso nenhum.
+func _chao_em(x: float) -> float:
+	var consulta := PhysicsRayQueryParameters2D.create(
+		Vector2(x, global_position.y - 24.0),
+		Vector2(x, global_position.y + ALCANCE_DA_SONDA),
+		CAMADA_DO_MUNDO
+	)
+	var golpe := get_world_2d().direct_space_state.intersect_ray(consulta)
+	if golpe.is_empty() or (golpe["normal"] as Vector2).y > -0.7:
+		return INF
+	return (golpe["position"] as Vector2).y
+
+
+## Primeiro ponto com piso adiante do vão. Sem nada em MAIOR_VAO pixels, devolve o fim
+## dessa distância na altura de agora — melhor um salto longo do que um travamento.
+func _outra_margem(x: float) -> Vector2:
+	var avanco := PASSO_DA_SONDA
+	while avanco <= MAIOR_VAO:
+		var alvo_x := x + avanco * _rumo
+		var chao := _chao_em(alvo_x)
+		if chao < INF:
+			return Vector2(alvo_x, chao)
+		avanco += PASSO_DA_SONDA
+	return Vector2(x + MAIOR_VAO * _rumo, global_position.y)

@@ -376,7 +376,9 @@ func _tabela_perfis() -> String:
 	texto += "\nA distância entre as duas linhas de cada dia é o que o jogo cobra por "
 	texto += "prioridade: é ela, e não a velocidade, que separa um placar do outro. O "
 	texto += "perfil apressado não conclui nenhum dia — o elevador só abre depois da cota "
-	texto += "de urgentes, então correr para a saída é literalmente um beco sem saída.\n\n"
+	texto += "de urgentes, então correr para a saída é literalmente um beco sem saída: "
+	texto += "chegar lá com urgente deixada para trás encerra o expediente em derrota, "
+	texto += "porque uma tarefa ultrapassada não volta a ser coletável.\n\n"
 	texto += "Duas ressalvas de leitura, para a tabela não dizer mais do que mediu:\n\n"
 	texto += "- **O perfil atento não é o ótimo provado**, é um robô guloso. Onde ele fica "
 	texto += "abaixo de 100% foi por encostar numa distração de passagem ou por resolver "
@@ -384,7 +386,8 @@ func _tabela_perfis() -> String:
 	texto += "O teto continua sendo o da coluna anterior.\n"
 	texto += "- **A coluna de tempo não é ritmo humano.** O robô se desloca por teleporte, "
 	texto += "então ela mede quanto do expediente a ROTA consome, não quanto um jogador "
-	texto += "levaria.\n\n"
+	texto += "levaria. No perfil apressado ela é ainda menos comparável: o expediente dele "
+	texto += "não chega ao fim, é interrompido no elevador.\n\n"
 	return texto
 
 
@@ -432,11 +435,11 @@ empírico" da Metodologia.
 
 | Suíte | Cenários | Asserções | O que cobre |
 |---|---|---|---|
-| `teste_fase_01` | 13 | 152 | pontuação, geometria do pulo integrada, robô que atravessa a pé, estados do urso, colega, pasta, modo foco e os setores anunciados dos dois corredores |
-| `teste_fase_02` | 9 | 86 | agenda determinística por posição, interrupção, geometria das chegadas, maturação de pendências, Q2 fora da linha de corrida e o orçamento de relógio do percurso perfeito |
-| `teste_fase_03` | 9 | 110 | as invariantes do sorteio em 200 sementes, a recusa de geometria quebrada, as 16 combinações canto x quadrante, a aritmética do soterramento, as fases do Chefe, um robô que pega e entrega um papel a pé, e as quatro mecânicas de pressão do expediente |
-| `teste_ranking` | 6 | 39 | payload por quadrante, ordem do ranking, fila offline, ausência de credenciais |
-| **total** | **37** | **387** | |
+| `teste_fase_01` | 17 | 171 | pontuação, geometria do pulo integrada, robô que atravessa a pé, estados do urso e a altura que ele persegue, colega, pasta, modo foco, setores anunciados dos dois corredores e a derrota ao chegar ao elevador com urgente perdida |
+| `teste_fase_02` | 10 | 91 | agenda determinística por posição, interrupção, geometria das chegadas, maturação de pendências, Q2 fora da linha de corrida, o orçamento de relógio do percurso perfeito e a contagem de urgentes ainda por chegar |
+| `teste_fase_03` | 9 | 118 | as invariantes do sorteio em 200 sementes, a recusa de geometria quebrada, as 16 combinações canto x quadrante, a aritmética do soterramento, as fases do Chefe, um robô que pega e entrega um papel a pé, e as quatro mecânicas de pressão do expediente |
+| `teste_ranking` | 7 | 45 | payload por quadrante, ordem do ranking, fila offline, ausência de credenciais |
+| **total** | **43** | **429** | |
 
 Rodar todas:
 

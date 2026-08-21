@@ -156,6 +156,18 @@ func meta_de_urgentes() -> int:
 	return META_URGENTES + crises
 
 
+## Aqui as urgentes ao alcance não são só as que estão no corredor: a agenda ainda tem
+## chegadas por disparar, e cada pendência a caminho de amadurecer vira uma urgente nova.
+## Sem somar as duas, chegar cedo ao elevador encerraria o dia por urgentes que ainda
+## nem tinham existido.
+func urgentes_ao_alcance() -> int:
+	return (
+		super()
+		+ spawner.ainda_por_chegar(GameManager.Categoria.URGENTE_IMPORTANTE)
+		+ _maturando.size()
+	)
+
+
 ## O modo foco acompanha o jogador do Dia 1 para cá. É habilidade aprendida, não pressão
 ## de fase — tirá-la seria desaprender. E aqui ela encontra o adversário certo: o foco
 ## dobra o raio de leitura, mas NÃO barra a notificação, que é justamente o que cega a

@@ -88,6 +88,17 @@ func composicao_prevista() -> Dictionary:
 	return mapa
 
 
+## Quantas tarefas de uma categoria a agenda ainda não apresentou. Diferente de
+## composicao_prevista(), que responde pelo dia inteiro: aqui só o que está por vir.
+func ainda_por_chegar(categoria: int) -> int:
+	var n := 0
+	for i in range(_proxima, _agenda.size()):
+		var entrada: Dictionary = _agenda[i]
+		if entrada.get("tipo", TAREFA) == TAREFA and int(entrada["categoria"]) == categoria:
+			n += 1
+	return n
+
+
 ## Quantas interrupções a agenda contém. Só para o teste e para o relatório.
 func total_de_notificacoes() -> int:
 	var n := 0

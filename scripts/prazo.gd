@@ -50,10 +50,23 @@ const ZONA_MORTA := 4.0
 ## Quanto a origem do jogador fica acima da superfície em que ele pisa.
 const ALTURA_DOS_PES := 17.0
 
+## Maior desnível que ele vence para acompanhar o jogador. Acima disso a plataforma é
+## área segura: os degraus do corredor sobem de 32 em 32px, e uma sequência deles ainda
+## o leva ao alto, um de cada vez.
+const DEGRAU_MAXIMO := 34.0
+
+## Folga da sonda de chão, para o raio nunca nascer exatamente sobre a superfície que
+## está tentando encontrar.
+const MARGEM_DA_SONDA := 2.0
+
+## Camada de colisão do cenário. O urso não colide com nada (mask 0), então a sonda
+## precisa nomear o que procura.
+const CAMADA_DO_MUNDO := 1
+
 @export_group("Ritmo")
-## Segundos de sono antes de acordar. É a janela em que o jogador lê a dica de
-## abertura sem já estar sendo caçado.
-@export var atraso_para_acordar: float = 3.0
+## Segundos de sono antes de acordar. Curto de propósito: ele abre a fase à vista, logo
+## atrás do jogador, e o rugido é a primeira coisa que acontece no expediente.
+@export var atraso_para_acordar: float = 1.0
 ## Velocidade de cruzeiro. Calibragem: a fase tem 2624px e 90s de expediente, ou
 ## seja o jogador precisa manter ~29px/s de avanço médio. 44px/s fica acima disso —
 ## quem joga no ritmo mínimo o sente na nuca; quem prioriza bem abre distância.
@@ -113,11 +126,14 @@ var _tempo_no_estado := 0.0
 var _recarga := 0.0
 var _sem_avancar := 0.0
 var _avanco_maximo := -INF
-var _jogador: Node2D = null
+var _jogador: CharacterBody2D = null
 var _perigo := 0.0
 var _alvo_recuo := 0.0
 ## Direção travada no início do bote, para a investida não perseguir no meio do salto.
 var _lado_do_bote := 1.0
+## Altura da última superfície em que o jogador foi visto pisando. É o alvo da subida —
+## ver _subir().
+var _piso_do_jogador := 0.0
 
 
 func _ready() -> void:
@@ -133,8 +149,9 @@ func _ready() -> void:
 
 	var jogadores := get_tree().get_nodes_in_group("Player")
 	if not jogadores.is_empty():
-		_jogador = jogadores[0]
+		_jogador = jogadores[0] as CharacterBody2D
 		_avanco_maximo = _jogador.global_position.x
+		_piso_do_jogador = _jogador.global_position.y + ALTURA_DOS_PES
 
 
 func _physics_process(delta: float) -> void:
@@ -169,18 +186,49 @@ func _physics_process(delta: float) -> void:
 	_atualizar_perigo()
 
 
-## Acompanha a altura do jogador até o teto de subida. Subir num degrau baixo deixou de
-## ser fuga; o mezanino continua sendo.
+## A altura do urso é sempre a de uma superfície REAL sob ele, sondada por raio. Ele não
+## tem gravidade nem colisão, então sem essa sonda qualquer alvo vertical o deixa andando
+## no ar assim que o jogador muda de altura ou a plataforma acaba.
+##
+## Ele só olha para cima quando o jogador está acima, e no máximo um degrau
+## (DEGRAU_MAXIMO): plataforma alta demais continua sendo área segura, que é a regra do
+## mezanino e das tarefas importantes e não urgentes.
 ##
 ## ALTURA_DOS_PES: a origem do jogador fica 16px acima da superfície em que ele pisa, e a
 ## do urso 1px abaixo dela — comparar as origens cruas o deixaria flutuando.
 func _subir(delta: float) -> void:
 	if estado == Estado.DORMINDO:
 		return
-	var alvo := clampf(
-		_jogador.global_position.y + ALTURA_DOS_PES, teto_de_subida, chao_y
-	)
+	if _jogador.is_on_floor():
+		_piso_do_jogador = _jogador.global_position.y + ALTURA_DOS_PES
+
+	var desejado := clampf(_piso_do_jogador, teto_de_subida, chao_y)
+	var procura := global_position.y - MARGEM_DA_SONDA
+	if desejado < global_position.y - MARGEM_DA_SONDA:
+		procura = global_position.y - DEGRAU_MAXIMO
+	elif desejado > global_position.y + MARGEM_DA_SONDA:
+		# Jogador mais embaixo: procura a partir de DENTRO do degrau atual, senão o urso
+		# fica parado em cima dele enquanto o jogador anda no piso logo abaixo.
+		procura = global_position.y + MARGEM_DA_SONDA
+	var alvo := maxf(_superficie_sob(maxf(procura, teto_de_subida - MARGEM_DA_SONDA)), teto_de_subida)
 	global_position.y = move_toward(global_position.y, alvo, velocidade_vertical * delta)
+
+
+## Onde o urso pisaria neste x, procurando a partir de `topo` para baixo. `chao_y` quando
+## não há nada — sobre um vão ele atravessa, como sempre atravessou.
+##
+## Só conta superfície virada para cima: sem o teste da normal, encostar numa borda do
+## corredor devolveria a lateral da parede e o faria escalar por ela.
+func _superficie_sob(topo: float) -> float:
+	var consulta := PhysicsRayQueryParameters2D.create(
+		Vector2(global_position.x, topo),
+		Vector2(global_position.x, chao_y + 24.0),
+		CAMADA_DO_MUNDO
+	)
+	var golpe := get_world_2d().direct_space_state.intersect_ray(consulta)
+	if golpe.is_empty() or (golpe["normal"] as Vector2).y > -0.7:
+		return chao_y
+	return (golpe["position"] as Vector2).y + 1.0
 
 
 func _virar_para(deslocamento: float) -> void:

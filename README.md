@@ -25,7 +25,8 @@ Produto prático do Trabalho de Conclusão de Curso em Engenharia de Software (U
 
 Nos dois primeiros dias você tem um expediente cronometrado para chegar ao elevador, e ele
 só abre depois de um número mínimo de tarefas **urgentes e importantes** resolvidas —
-correr direto para a saída não funciona.
+correr direto para a saída não funciona. Uma tarefa que você ultrapassa fica para trás de
+vez: chegar ao elevador com urgente pendente encerra o dia como derrota.
 
 ### Os três dias
 

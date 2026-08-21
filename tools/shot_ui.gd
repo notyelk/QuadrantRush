@@ -28,6 +28,8 @@ func _ready() -> void:
 	await _pausa()
 	await _resultado()
 	await _derrota()
+	await _vitoria_final()
+	await _derrota_no_elevador()
 	await _licao()
 	await _encerramento()
 	await _ranking()
@@ -136,6 +138,44 @@ func _derrota() -> void:
 	await get_tree().process_frame
 
 
+## A vitória do último dia: além do relatório e das duas linhas extras, ela é a única
+## tela que oferece o botão de encerramento junto de todos os outros.
+func _vitoria_final() -> void:
+	_semear_partida(3)
+	GameManager.tempo_restante = 0.0
+	Perfil.dia_liberado = 3
+	GameManager.finalizar_fase(true)
+
+	var tela: Node = load("res://scenes/ui/tela_resultado.tscn").instantiate()
+	add_child(tela)
+	tela.montar(true, _composicao(), [
+		["Pilha de pendências", "9 de 24"],
+		["Fase do Chefe alcançada", "4 de 4"],
+	], ["VOCÊ AGUENTOU ATÉ O FIM",
+		"Kleytonn atravessou a reunião de encerramento sem ser soterrado."])
+	await get_tree().create_timer(1.5).timeout
+	await _salvar("vitoria_final.png")
+	tela.queue_free()
+	await get_tree().process_frame
+
+
+## A derrota dos corredores: chegar ao elevador com urgente deixada para trás. O fecho
+## dela é a frase mais longa que a tela de resultado recebe.
+func _derrota_no_elevador() -> void:
+	_semear_partida(1)
+	GameManager.finalizar_fase(false)
+
+	var tela: Node = load("res://scenes/ui/tela_resultado.tscn").instantiate()
+	add_child(tela)
+	tela.montar(false, _composicao(), [], ["DIA PERDIDO",
+		"o elevador não abre: 2 urgentes ficaram para trás e não há como voltar a elas."])
+	# As barras por quadrante entram por tween: fotografar antes delas deixa o painel vazio.
+	await get_tree().create_timer(1.5).timeout
+	await _salvar("derrota_elevador.png")
+	tela.queue_free()
+	await get_tree().process_frame
+
+
 ## A explicação do erro, nas duas telas dela: o resumo e o detalhe de um quadrante.
 func _licao() -> void:
 	_semear_partida(3)
@@ -223,7 +263,19 @@ func _ranking() -> void:
 		}, true)
 
 	GameManager.dia = 1
-	await _fotografar_cena("res://scenes/ui/tela_ranking.tscn", "ranking.png")
+
+	# A consulta é assíncrona quando há nuvem configurada: fotografar depois dos quadros
+	# de espera de sempre pegaria a tela ainda em "consultando...".
+	var cena: Node = load("res://scenes/ui/tela_ranking.tscn").instantiate()
+	add_child(cena)
+	for _i in 900:
+		if not cena.origem.text.begins_with("consultando"):
+			break
+		await get_tree().process_frame
+	await _esperar()
+	await _salvar("ranking.png")
+	cena.queue_free()
+	await get_tree().process_frame
 
 
 func _fotografar_cena(caminho: String, nome: String) -> void:

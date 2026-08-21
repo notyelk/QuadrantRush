@@ -12,6 +12,10 @@ extends Control
 ## fica trancado até a primeira vitória no Dia 1 — quem chega ao jogo pela primeira vez
 ## não deve poder pular a fase que ensina a mecânica.
 
+const Encaixe := preload("res://scripts/encaixe.gd")
+
+@onready var painel: Control = $Painel
+@onready var conteudo: VBoxContainer = $Painel/Conteudo
 @onready var campo: LineEdit = $Painel/Conteudo/Identificacao/Campo
 @onready var aviso: Label = $Painel/Conteudo/Aviso
 @onready var lista_dias: HBoxContainer = $Painel/Conteudo/Dias
@@ -42,6 +46,7 @@ func _ready() -> void:
 	botao_jogar.pressed.connect(_ao_jogar)
 	botao_ranking.pressed.connect(_ao_ranking)
 	botao_sair.pressed.connect(_ao_sair)
+	_encaixar()
 
 	# Fechar a aba não é coisa que um jogo web faça, e a Etapa 9 exporta para WebGL.
 	botao_sair.visible = not OS.has_feature("web")
@@ -58,6 +63,13 @@ func _ready() -> void:
 ## A validação acontece na digitação, não no clique: o jogador descobre que o nome
 ## não serve enquanto ainda está olhando para o campo, em vez de apertar JOGAR e
 ## nada acontecer.
+## Um botão por dia liberado faz a fileira crescer com o jogo; sem isto ela sai por
+## baixo da caixa quando os três expedientes estão à mostra.
+func _encaixar() -> void:
+	await get_tree().process_frame
+	Encaixe.no_painel(painel, conteudo, 6.0)
+
+
 func _ao_digitar(_texto: String) -> void:
 	_atualizar_estado()
 

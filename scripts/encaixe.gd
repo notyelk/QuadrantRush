@@ -17,5 +17,7 @@ static func no_painel(painel: Control, conteudo: Control, margem := 8.0) -> void
 	# Pivô no topo e no meio: encolher a partir do canto deixaria o painel com um vão
 	# embaixo e o título fora do eixo.
 	conteudo.pivot_offset = Vector2(conteudo.size.x * 0.5, 0.0)
-	var fator: float = clampf(disponivel / precisa, 0.55, 1.0)
+	# O piso é o menor tamanho ainda legível no viewport de 400x208. Abaixo dele o texto
+	# deixa de ser lido, e o certo passa a ser cortar conteúdo, não continuar encolhendo.
+	var fator: float = clampf(disponivel / precisa, 0.45, 1.0)
 	conteudo.scale = Vector2(fator, fator)
